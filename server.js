@@ -194,6 +194,26 @@ ${customContext ? `\nZusätzliche Wünsche vom Ersteller: ${customContext}\n` : 
     ? 'Zielgruppe (ohne speziellen Gesundheitsfokus): ältere Menschen; oft mit leichter kognitiver Einschränkung (z. B. Demenz). Wortwahl und Hinweise müssen zur gewählten **Schwierigkeit** passen.'
     : 'Zielgruppe und sprachliche Leitplanken: im **Gesundheits-/Unterstützungskontext** oben beschrieben (verbindlich). Wortlänge und Alltagsnähe **zusätzlich** strikt gemäß **Schwierigkeit**.';
 
+  // Word history block — avoid repetition across sessions
+  const wordHistory = settings.wordHistory;
+  let wordHistoryBlock = '';
+  if (wordHistory && typeof wordHistory === 'object' && Object.keys(wordHistory).length > 0) {
+    const entries = Object.entries(wordHistory)
+      .filter(([w, c]) => w.length >= 4 && typeof c === 'number' && c >= 1)
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, 80);
+    if (entries.length > 0) {
+      const wordList = entries.map(([w, c]) => c > 1 ? `${w} (${c}\u00d7)` : w).join(', ');
+      wordHistoryBlock = `
+=== WORTGEDÄCHTNIS — BEREITS VERWENDETE WÖRTER (verbindlich) ===
+Die folgenden Lösungswörter wurden in früheren Rätseln für diese Person bereits benutzt. **Verwende sie nicht noch einmal** — wähle stets frische, andere Begriffe, um Wiederholungen über mehrere Rätsel hinweg zu vermeiden. Besonders häufig verwendete Wörter (hohe Zahl) sind besonders wichtig zu meiden.
+
+${wordList}
+=== Ende Wortgedächtnis ===
+`;
+    }
+  }
+
   return `Erstelle genau ${wordCount} deutsche Wörter mit jeweils einem kurzen Hinweis (Rätselfrage) für ein Kreuzworträtsel.
 
 ${difficultyBlock(difficulty)}${healthProfileBlock(healthProfile)}
@@ -201,7 +221,7 @@ ${audienceLine} Ton: warm, würdevoll, positiv, sehr klar. Keine ironischen Text
 
 ${nameLine}
 ${name ? `Als JSON-"title" z. B. ein herzlicher Titel in Großbuchstaben, z. B. „${name.toUpperCase()}S FAMILIENRÄTSEL“ oder „EIN RÄTSEL FÜR ${name.toUpperCase()}“ — oder eine eigene passende Kurzform.` : 'Als JSON-"title" einen kurzen, herzlichen Titel (gern in Großbuchstaben, Magazinstil).'}
-${loesungBlock}${personalBlock}${generalBlock}
+${loesungBlock}${wordHistoryBlock}${personalBlock}${generalBlock}
 ${puzzleTypePromptExtra(puzzleType)}
 
 Technische Regeln:

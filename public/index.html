@@ -1113,6 +1113,185 @@
       }
     }
 
+    /* ===== MEMORY PANEL ===== */
+    .memory-panel {
+      padding: 20px 24px 32px;
+    }
+    .memory-panel h2 {
+      font-size: 18px;
+      font-weight: 700;
+      color: var(--ui-primary-dark);
+      margin-bottom: 4px;
+      font-family: Georgia, serif;
+    }
+    .memory-panel .mem-intro {
+      font-size: 13px;
+      color: var(--ui-muted);
+      margin-bottom: 20px;
+      line-height: 1.5;
+    }
+    .mem-section {
+      margin-bottom: 28px;
+    }
+    .mem-section-title {
+      font-family: Arial, Helvetica, sans-serif;
+      font-size: 11px;
+      font-weight: 900;
+      letter-spacing: 3px;
+      text-transform: uppercase;
+      color: var(--ui-primary);
+      border-bottom: 2px solid var(--ui-primary);
+      padding-bottom: 4px;
+      margin-bottom: 14px;
+    }
+    .mem-stats {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+      margin-bottom: 14px;
+    }
+    .mem-stat-chip {
+      background: var(--ui-toolbar);
+      border: 1px solid var(--ui-border);
+      border-radius: 20px;
+      padding: 4px 14px;
+      font-size: 12px;
+      font-family: Arial, sans-serif;
+      color: var(--ui-muted);
+    }
+    .mem-stat-chip strong { color: var(--ui-primary-dark); }
+    .mem-actions {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin-bottom: 18px;
+    }
+    .btn--danger {
+      background: transparent;
+      border: 1.5px solid #c0392b;
+      color: #c0392b;
+      font-size: 13px;
+      padding: 6px 14px;
+      border-radius: var(--ui-radius-sm);
+      cursor: pointer;
+      font-family: Arial, sans-serif;
+      font-weight: 600;
+      transition: background 0.15s, color 0.15s;
+    }
+    .btn--danger:hover { background: #c0392b; color: #fff; }
+    .btn--sm {
+      font-size: 12px;
+      padding: 4px 10px;
+    }
+    /* Word frequency table */
+    .word-freq-grid {
+      display: grid;
+      grid-template-columns: 1fr auto auto;
+      gap: 0;
+      border: 1px solid var(--ui-border);
+      border-radius: var(--ui-radius-sm);
+      overflow: hidden;
+      font-family: Arial, sans-serif;
+      font-size: 13px;
+    }
+    .wf-head {
+      background: var(--ui-toolbar);
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      color: var(--ui-muted);
+      padding: 7px 10px;
+      border-bottom: 1px solid var(--ui-border);
+    }
+    .wf-cell {
+      padding: 6px 10px;
+      border-bottom: 1px solid #ece8e0;
+      display: flex;
+      align-items: center;
+    }
+    .wf-cell:nth-child(3n+1) { font-weight: 700; color: #2a2018; letter-spacing: 0.04em; }
+    .wf-count-badge {
+      display: inline-block;
+      background: var(--ui-primary);
+      color: #fff;
+      font-size: 10px;
+      font-weight: 700;
+      border-radius: 10px;
+      padding: 1px 7px;
+      min-width: 24px;
+      text-align: center;
+    }
+    .wf-del-btn {
+      background: none;
+      border: none;
+      cursor: pointer;
+      color: #aaa;
+      font-size: 14px;
+      padding: 2px 6px;
+      border-radius: 4px;
+      transition: color 0.15s, background 0.15s;
+      line-height: 1;
+    }
+    .wf-del-btn:hover { color: #c0392b; background: #fdecea; }
+    .word-freq-grid .wf-cell:last-child,
+    .word-freq-grid .wf-head:last-child { border-bottom: none; }
+    .mem-empty {
+      font-size: 13px;
+      color: var(--ui-muted);
+      font-style: italic;
+      padding: 12px 0;
+    }
+    /* History list */
+    .history-list {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    .history-entry {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      background: var(--ui-toolbar);
+      border: 1px solid var(--ui-border);
+      border-radius: var(--ui-radius-sm);
+      padding: 8px 12px;
+      font-family: Arial, sans-serif;
+      font-size: 13px;
+    }
+    .hist-date {
+      color: var(--ui-muted);
+      font-size: 11px;
+      min-width: 80px;
+      flex-shrink: 0;
+    }
+    .hist-title {
+      flex: 1;
+      font-weight: 600;
+      color: #2a2018;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    .hist-wcount {
+      color: var(--ui-muted);
+      font-size: 11px;
+      min-width: 60px;
+      text-align: right;
+    }
+    .hist-del-btn {
+      background: none;
+      border: none;
+      cursor: pointer;
+      color: #bbb;
+      font-size: 15px;
+      padding: 2px 5px;
+      border-radius: 4px;
+      transition: color 0.15s, background 0.15s;
+      flex-shrink: 0;
+    }
+    .hist-del-btn:hover { color: #c0392b; background: #fdecea; }
+
     /* ===== SOLUTION MODE ===== */
     body.show-solution .cell-letter { opacity: 1 !important; }
     body.show-solution .cell-letter.hidden { opacity: 0.55 !important; color: #c8102e !important; }
@@ -1394,6 +1573,8 @@
       onclick="switchMainTab('puzzle')">Einzelrätsel</button>
     <button type="button" class="main-tab" id="tabDeckBtn" role="tab" aria-selected="false"
       onclick="switchMainTab('deck')">Stapel &amp; ZIP</button>
+    <button type="button" class="main-tab" id="tabMemoryBtn" role="tab" aria-selected="false"
+      onclick="switchMainTab('memory')">Wortgedächtnis</button>
   </nav>
 
   <!-- Settings Panel — shared between both tabs -->
@@ -1562,6 +1743,43 @@
 
   </div><!-- /panelPuzzle -->
 
+  <div id="panelMemory" class="no-print" style="display:none" role="tabpanel" aria-hidden="true">
+    <div class="memory-panel">
+      <h2>Wortgedächtnis</h2>
+      <p class="mem-intro">
+        Alle bisher generierten Lösungswörter werden hier gespeichert — inklusive dem Lösungswort jedes Rätsels.
+        Claude bekommt diese Liste beim nächsten Rätsel mit und vermeidet Wiederholungen automatisch.
+        Sie können einzelne Wörter oder ganze Einträge löschen.
+      </p>
+
+      <div class="mem-section">
+        <div class="mem-section-title">Übersicht</div>
+        <div class="mem-stats" id="memStats">
+          <span class="mem-stat-chip"><strong id="memTotalPuzzles">0</strong> Rätsel gespeichert</span>
+          <span class="mem-stat-chip"><strong id="memTotalWords">0</strong> einzigartige Wörter</span>
+        </div>
+        <div class="mem-actions">
+          <button type="button" class="btn btn--secondary btn--sm" onclick="exportWordHistory()">
+            Als Text kopieren
+          </button>
+          <button type="button" class="btn--danger btn--sm" onclick="clearAllHistory()">
+            Alles löschen
+          </button>
+        </div>
+      </div>
+
+      <div class="mem-section">
+        <div class="mem-section-title">Wortfrequenz (häufigste zuerst)</div>
+        <div id="wordFreqContainer"></div>
+      </div>
+
+      <div class="mem-section">
+        <div class="mem-section-title">Rätsel-Verlauf</div>
+        <div id="historyListContainer"></div>
+      </div>
+    </div>
+  </div><!-- /panelMemory -->
+
   <div id="panelDeck" class="deck-panel no-print" style="display:none" role="tabpanel" aria-hidden="true">
     <div class="controls no-print">
       <button type="button" class="btn btn--secondary" id="deckSettingsBtn" onclick="toggleSettings()">
@@ -1713,29 +1931,40 @@
   function switchMainTab(which) {
     const puzzlePanel = document.getElementById('panelPuzzle');
     const deckPanel   = document.getElementById('panelDeck');
+    const memoryPanel = document.getElementById('panelMemory');
     const tabP = document.getElementById('tabPuzzleBtn');
     const tabD = document.getElementById('tabDeckBtn');
+    const tabM = document.getElementById('tabMemoryBtn');
     if (!puzzlePanel || !deckPanel || !tabP || !tabD) return;
 
+    // Hide all panels
+    puzzlePanel.style.display = 'none';
+    puzzlePanel.classList.remove('settings-open');
+    deckPanel.style.display = 'none';
+    if (memoryPanel) { memoryPanel.style.display = 'none'; memoryPanel.setAttribute('aria-hidden', 'true'); }
+    deckPanel.setAttribute('aria-hidden', 'true');
+
+    // Deactivate all tabs
+    tabP.classList.remove('active'); tabP.setAttribute('aria-selected', 'false');
+    tabD.classList.remove('active'); tabD.setAttribute('aria-selected', 'false');
+    if (tabM) { tabM.classList.remove('active'); tabM.setAttribute('aria-selected', 'false'); }
+
     if (which === 'deck') {
-      puzzlePanel.style.display = 'none';
-      puzzlePanel.classList.remove('settings-open');
       deckPanel.style.display = 'block';
-      tabP.classList.remove('active');
-      tabD.classList.add('active');
-      tabP.setAttribute('aria-selected', 'false');
-      tabD.setAttribute('aria-selected', 'true');
       deckPanel.setAttribute('aria-hidden', 'false');
+      tabD.classList.add('active'); tabD.setAttribute('aria-selected', 'true');
+    } else if (which === 'memory') {
+      if (memoryPanel) {
+        memoryPanel.style.display = 'block';
+        memoryPanel.setAttribute('aria-hidden', 'false');
+      }
+      if (tabM) { tabM.classList.add('active'); tabM.setAttribute('aria-selected', 'true'); }
+      renderMemoryPanel();
     } else {
       puzzlePanel.style.display = '';
       const settingsOpen = document.getElementById('settingsPanel')?.classList.contains('open');
       puzzlePanel.classList.toggle('settings-open', !!settingsOpen);
-      deckPanel.style.display = 'none';
-      tabP.classList.add('active');
-      tabD.classList.remove('active');
-      tabP.setAttribute('aria-selected', 'true');
-      tabD.setAttribute('aria-selected', 'false');
-      deckPanel.setAttribute('aria-hidden', 'true');
+      tabP.classList.add('active'); tabP.setAttribute('aria-selected', 'true');
     }
   }
 
@@ -2010,15 +2239,17 @@
         const wordLabel = pickRandom(STAPEL_LABEL_WORDS);
         prog.textContent = `Rätsel ${i} von ${n}: ${wordLabel}`;
         setClaudeQuestProgressLine(`Schritt ${i} / ${n}: ${wordLabel}`);
+        const deckSettings = { ...getSettings(), wordHistory: getWordHistoryForPrompt() };
         const genRes = await fetch('/api/generate', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ settings: getSettings() }),
+          body: JSON.stringify({ settings: deckSettings }),
         });
         const data = await genRes.json();
         if (!genRes.ok || data.error) {
           throw new Error(data.error || `Generierung fehlgeschlagen (HTTP ${genRes.status}).`);
         }
+        addPuzzleToHistory(data);
 
         const pdfPlayLabel = pickRandom(STAPEL_LABEL_PDF_PLAY);
         prog.textContent = `Rätsel ${i} von ${n}: ${pdfPlayLabel}`;
@@ -2079,6 +2310,154 @@
     }
   }
 
+  // ---- Word History / Memory ----
+
+  const HISTORY_KEY       = 'ratsel-history';
+  const EXCLUSIONS_KEY    = 'ratsel-word-exclusions';
+  const MAX_HISTORY       = 120;
+
+  function getHistory() {
+    try { return JSON.parse(localStorage.getItem(HISTORY_KEY) || '[]'); } catch { return []; }
+  }
+
+  function saveHistory(h) {
+    localStorage.setItem(HISTORY_KEY, JSON.stringify(h));
+  }
+
+  function getExclusions() {
+    try { return new Set(JSON.parse(localStorage.getItem(EXCLUSIONS_KEY) || '[]')); } catch { return new Set(); }
+  }
+
+  function saveExclusions(s) {
+    localStorage.setItem(EXCLUSIONS_KEY, JSON.stringify([...s]));
+  }
+
+  /** Compute { WORD: count } from history minus exclusions. */
+  function getWordFrequencies() {
+    const excl = getExclusions();
+    const freq = {};
+    for (const entry of getHistory()) {
+      for (const w of (entry.words || [])) {
+        if (!excl.has(w)) freq[w] = (freq[w] || 0) + 1;
+      }
+    }
+    return freq;
+  }
+
+  /** The top-N word frequencies to send to Claude. */
+  function getWordHistoryForPrompt() {
+    return getWordFrequencies();
+  }
+
+  /** Called after every successful puzzle generation. Tracks all words + Lösungswort. */
+  function addPuzzleToHistory(data) {
+    const words = new Set();
+    for (const w of (data.words || [])) {
+      if (w.word && w.word.length >= 4) words.add(w.word.toUpperCase());
+    }
+    // Also track the Lösungswort!
+    if (data.loesungswort && data.loesungswort.length >= 4) {
+      words.add(data.loesungswort.toUpperCase());
+    }
+    if (words.size === 0) return;
+
+    const entry = {
+      id: Date.now().toString(36) + Math.random().toString(36).slice(2, 6),
+      date: new Date().toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit', year: 'numeric' }),
+      title: data.title || 'Kreuzworträtsel',
+      words: [...words],
+    };
+
+    const h = getHistory();
+    h.unshift(entry);
+    if (h.length > MAX_HISTORY) h.splice(MAX_HISTORY);
+    saveHistory(h);
+  }
+
+  function deleteHistoryEntry(id) {
+    const h = getHistory().filter(e => e.id !== id);
+    saveHistory(h);
+    renderMemoryPanel();
+  }
+
+  function excludeWord(word) {
+    const excl = getExclusions();
+    excl.add(word);
+    saveExclusions(excl);
+    renderMemoryPanel();
+  }
+
+  function clearAllHistory() {
+    if (!confirm('Wirklich alle gespeicherten Rätsel und das gesamte Wortgedächtnis löschen?')) return;
+    localStorage.removeItem(HISTORY_KEY);
+    localStorage.removeItem(EXCLUSIONS_KEY);
+    renderMemoryPanel();
+  }
+
+  function exportWordHistory() {
+    const freq = getWordFrequencies();
+    const lines = Object.entries(freq)
+      .sort((a, b) => b[1] - a[1])
+      .map(([w, c]) => `${w}: ${c}×`);
+    if (!lines.length) { alert('Noch keine Wörter gespeichert.'); return; }
+    const text = lines.join('\n');
+    navigator.clipboard?.writeText(text).then(() => {
+      alert('Wortliste in die Zwischenablage kopiert!');
+    }).catch(() => {
+      prompt('Wortliste (kopieren mit Strg+A, Strg+C):', text);
+    });
+  }
+
+  function renderMemoryPanel() {
+    const freq = getWordFrequencies();
+    const history = getHistory();
+    const totalWords = Object.keys(freq).length;
+
+    const totalPuzzlesEl = document.getElementById('memTotalPuzzles');
+    const totalWordsEl   = document.getElementById('memTotalWords');
+    if (totalPuzzlesEl) totalPuzzlesEl.textContent = history.length;
+    if (totalWordsEl)   totalWordsEl.textContent   = totalWords;
+
+    // --- Word frequency grid ---
+    const freqContainer = document.getElementById('wordFreqContainer');
+    if (freqContainer) {
+      const sorted = Object.entries(freq).sort((a, b) => b[1] - a[1]);
+      if (!sorted.length) {
+        freqContainer.innerHTML = '<p class="mem-empty">Noch keine Wörter gespeichert. Erstellen Sie ein Rätsel, um das Gedächtnis zu füllen.</p>';
+      } else {
+        let html = '<div class="word-freq-grid">';
+        html += '<div class="wf-head">Wort</div><div class="wf-head" style="text-align:center">Häufigkeit</div><div class="wf-head"></div>';
+        for (const [word, count] of sorted) {
+          html += `<div class="wf-cell">${escHtml(word)}</div>`;
+          html += `<div class="wf-cell" style="justify-content:center"><span class="wf-count-badge">${count}</span></div>`;
+          html += `<div class="wf-cell"><button class="wf-del-btn" title="Wort aus Gedächtnis entfernen" onclick="excludeWord(${JSON.stringify(word)})">✕</button></div>`;
+        }
+        html += '</div>';
+        freqContainer.innerHTML = html;
+      }
+    }
+
+    // --- History list ---
+    const histContainer = document.getElementById('historyListContainer');
+    if (histContainer) {
+      if (!history.length) {
+        histContainer.innerHTML = '<p class="mem-empty">Noch kein Rätsel-Verlauf vorhanden.</p>';
+      } else {
+        let html = '<div class="history-list">';
+        for (const entry of history) {
+          html += `<div class="history-entry">
+            <span class="hist-date">${escHtml(entry.date)}</span>
+            <span class="hist-title" title="${escHtml(entry.title)}">${escHtml(entry.title)}</span>
+            <span class="hist-wcount">${entry.words.length} Wörter</span>
+            <button class="hist-del-btn" title="Diesen Eintrag löschen" onclick="deleteHistoryEntry(${JSON.stringify(entry.id)})">✕</button>
+          </div>`;
+        }
+        html += '</div>';
+        histContainer.innerHTML = html;
+      }
+    }
+  }
+
   // ---- Startup ----
   renderTopicChips();
   loadSettings();
@@ -2114,10 +2493,11 @@
 
     let questOk = false;
     try {
+      const settings = { ...getSettings(), wordHistory: getWordHistoryForPrompt() };
       const res = await fetch('/api/generate', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ settings: getSettings() }),
+        body: JSON.stringify({ settings }),
       });
 
       const data = await res.json();
@@ -2128,6 +2508,7 @@
 
       currentPuzzle = data;
       puzzleCount++;
+      addPuzzleToHistory(data);
       questOk = true;
       hideClaudeQuestOverlay();
       const settingsPanel = document.getElementById('settingsPanel');
