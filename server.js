@@ -590,28 +590,47 @@ async function fetchLoesungswortAfterPlacement(placedWords, title, settings) {
 }
 
 // ---------------------------------------------------------------------------
-// Crossword placement algorithm  (exhaustive search, densely-connected)
+// Crossword placement algorithm  — dense, maximises crossings
 // ---------------------------------------------------------------------------
 
 function placeCrossword(wordObjects) {
   const nWords = wordObjects.length;
-  // Adaptive grid size — keeps the puzzle dense without wasting space
-  const SIZE = nWords <= 18 ? 15 : nWords <= 24 ? 17 : nWords <= 30 ? 19 : 21;
 
-  // Sort longest-first for the base ordering (long words = more crossing chances)
+  // Tighter grid: real crosswords pack ~1 letter per 1.5 cells
+  const SIZE = nWords <= 16 ? 13 : nWords <= 22 ? 15 : nWords <= 28 ? 17 : 19;
+
+  // Sort longest-first; they anchor the most crossings
   const sorted = [...wordObjects].sort((a, b) => b.word.length - a.word.length);
 
-  // --- Inner placement function (one attempt with a given word ordering) ---
   function tryPlacement(ordering) {
     const grid    = Array.from({ length: SIZE }, () => Array(SIZE).fill(null));
     const dirGrid = Array.from({ length: SIZE }, () => Array(SIZE).fill(null));
     const placed  = [];
+    let   totalCrossings = 0;
 
     function hasLetter(r, c) {
       return r >= 0 && r < SIZE && c >= 0 && c < SIZE && grid[r][c] !== null;
     }
 
-    // Returns crossing count if valid, -1 otherwise
+    // Count letters adjacent to the proposed placement (encourages compactness)
+    function adjacencyBonus(word, row, col, dir) {
+      let bonus = 0;
+      for (let i = 0; i < word.length; i++) {
+        const r = dir === 'down'   ? row + i : row;
+        const c = dir === 'across' ? col + i : col;
+        if (grid[r][c] !== null) continue; // crossing cell — already counted
+        if (dir === 'across') {
+          if (hasLetter(r - 1, c)) bonus++;
+          if (hasLetter(r + 1, c)) bonus++;
+        } else {
+          if (hasLetter(r, c - 1)) bonus++;
+          if (hasLetter(r, c + 1)) bonus++;
+        }
+      }
+      return bonus;
+    }
+
+    // Returns crossing count if valid placement, -1 otherwise
     function evaluatePlace(word, row, col, dir) {
       const endR = dir === 'down'   ? row + word.length - 1 : row;
       const endC = dir === 'across' ? col + word.length - 1 : col;
@@ -619,11 +638,11 @@ function placeCrossword(wordObjects) {
 
       // No letter immediately before/after (prevents word-merging)
       if (dir === 'across') {
-        if (hasLetter(row, col - 1))           return -1;
-        if (hasLetter(row, col + word.length))  return -1;
+        if (hasLetter(row, col - 1))          return -1;
+        if (hasLetter(row, col + word.length)) return -1;
       } else {
-        if (hasLetter(row - 1, col))            return -1;
-        if (hasLetter(row + word.length, col))  return -1;
+        if (hasLetter(row - 1, col))           return -1;
+        if (hasLetter(row + word.length, col)) return -1;
       }
 
       let crossings = 0;
@@ -636,7 +655,7 @@ function placeCrossword(wordObjects) {
           if (dirGrid[r][c] === dir) return -1; // same-direction overlap
           crossings++;
         } else {
-          // No parallel neighbour in empty cells
+          // Reject if a parallel neighbour would create an illegal adjacency
           if (dir === 'across') {
             if (hasLetter(r - 1, c) || hasLetter(r + 1, c)) return -1;
           } else {
@@ -648,7 +667,7 @@ function placeCrossword(wordObjects) {
       return crossings;
     }
 
-    function commitWord(wordObj, row, col, dir) {
+    function commitWord(wordObj, row, col, dir, crossings) {
       const { word } = wordObj;
       for (let i = 0; i < word.length; i++) {
         const r = dir === 'down'   ? row + i : row;
@@ -657,13 +676,14 @@ function placeCrossword(wordObjects) {
         dirGrid[r][c] = dirGrid[r][c] && dirGrid[r][c] !== dir ? 'both' : dir;
       }
       placed.push({ ...wordObj, row, col, direction: dir });
+      totalCrossings += (crossings || 0);
     }
 
     // First word: horizontal through centre
     const first = ordering[0];
-    commitWord(first, Math.floor(SIZE / 2), Math.floor((SIZE - first.word.length) / 2), 'across');
+    commitWord(first, Math.floor(SIZE / 2), Math.floor((SIZE - first.word.length) / 2), 'across', 0);
 
-    // Remaining words: exhaustive search, strongly penalise distance from centre
+    // Remaining words: score = crossings^2 * 300 + adjacency*20 - distance*12
     for (let wi = 1; wi < ordering.length; wi++) {
       const wordObj = ordering[wi];
       const word    = wordObj.word;
@@ -675,31 +695,33 @@ function placeCrossword(wordObjects) {
           for (let c = 0; c < SIZE; c++) {
             const crossings = evaluatePlace(word, r, c, dir);
             if (crossings < 0) continue;
-            // Reward multiple crossings strongly; punish distance from centre hard
             const dist  = Math.abs(r - SIZE / 2) + Math.abs(c - SIZE / 2);
-            const score = crossings * crossings * 100 - dist * 2.5;
-            if (score > bestScore) { bestScore = score; best = { row: r, col: c, direction: dir }; }
+            const adj   = adjacencyBonus(word, r, c, dir);
+            // Crossings rewarded quadratically; distance penalised hard; adjacency bonus
+            const score = crossings * crossings * 300 + adj * 20 - dist * 12;
+            if (score > bestScore) { bestScore = score; best = { row: r, col: c, direction: dir, crossings }; }
           }
         }
       }
-      if (best) commitWord(wordObj, best.row, best.col, best.direction);
+      if (best) commitWord(wordObj, best.row, best.col, best.direction, best.crossings);
     }
-    return placed;
+    return { placed, totalCrossings };
   }
 
-  // --- Run up to 8 attempts with shuffled orderings; keep the best result ---
-  let bestPlaced = null;
-  let bestCount  = 0;
-  const minGood  = Math.floor(nWords * 0.88);
+  // Run up to 20 attempts; keep the attempt with the most crossings (not just word count)
+  let bestPlaced      = null;
+  let bestCount       = 0;
+  let bestCrossings   = -1;
+  const minGood       = Math.floor(nWords * 0.88);
 
-  for (let attempt = 0; attempt < 8; attempt++) {
+  for (let attempt = 0; attempt < 20; attempt++) {
     let ordering;
     if (attempt === 0) {
-      ordering = sorted; // deterministic first pass
+      ordering = sorted;
     } else {
-      // Keep the 2 longest words first, shuffle the rest
-      const top  = sorted.slice(0, 2);
-      const rest = [...sorted.slice(2)];
+      // Keep top-3 longest to anchor, shuffle the rest
+      const top  = sorted.slice(0, 3);
+      const rest = [...sorted.slice(3)];
       for (let i = rest.length - 1; i > 0; i--) {
         const j = Math.floor(Math.random() * (i + 1));
         [rest[i], rest[j]] = [rest[j], rest[i]];
@@ -707,12 +729,17 @@ function placeCrossword(wordObjects) {
       ordering = [...top, ...rest];
     }
 
-    const placed = tryPlacement(ordering);
-    if (placed.length > bestCount) {
-      bestCount  = placed.length;
-      bestPlaced = placed;
-      if (bestCount >= minGood) break; // good enough — stop early
+    const { placed, totalCrossings } = tryPlacement(ordering);
+    // Primary: maximise crossings; secondary: word count
+    const better = placed.length > bestCount ||
+      (placed.length === bestCount && totalCrossings > bestCrossings);
+    if (better) {
+      bestCount     = placed.length;
+      bestCrossings = totalCrossings;
+      bestPlaced    = placed;
     }
+    // Stop early only when we have a dense result
+    if (bestCount >= minGood && bestCrossings >= Math.floor(bestCount * 1.2)) break;
   }
 
   if (!bestPlaced || bestPlaced.length < 10) return null;
