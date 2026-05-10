@@ -290,6 +290,7 @@ app.post('/api/generate', async (req, res) => {
 
 function generatePuzzleHTML(puzzleData, showSolution = false, omaName = 'Maria') {
   const { title, gridWidth, gridHeight, words } = puzzleData;
+  const nWords = words.length;
 
   // Build letter grid
   const grid = Array.from({ length: gridHeight }, () => Array(gridWidth).fill(null));
@@ -307,8 +308,14 @@ function generatePuzzleHTML(puzzleData, showSolution = false, omaName = 'Maria')
     if (w.number !== undefined) numMap[`${w.row},${w.col}`] = w.number;
   }
 
-  // Cell size in px (for the PDF grid)
-  const CELL = 36;
+  // ~usable content width inside A4 (px @ 96dpi) — shrink cell size so wide grids fit
+  const usableWpx = 540;
+  const CELL = Math.max(13, Math.min(34, Math.floor(usableWpx / Math.max(1, gridWidth))));
+
+  // Tighter clue typography when many words (helps single-page PDF)
+  const clueFontPx = nWords > 22 ? 9.5 : nWords > 16 ? 10.5 : 12;
+  const clueGapPx = nWords > 22 ? 3 : 5;
+  const clueHeadPx = nWords > 22 ? 8 : 9;
 
   // Grid cells
   let gridCells = '';
@@ -335,8 +342,7 @@ function generatePuzzleHTML(puzzleData, showSolution = false, omaName = 'Maria')
     `<div class="clue"><span class="cn">${w.number}</span><span class="ct">${w.clue.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')}</span></div>`
   ).join('');
 
-  const gridW = gridWidth  * CELL;
-  const gridH = gridHeight * CELL;
+  const gridW = gridWidth * CELL;
 
   return `<!DOCTYPE html>
 <html lang="de">
@@ -353,37 +359,34 @@ function generatePuzzleHTML(puzzleData, showSolution = false, omaName = 'Maria')
   }
   .page {
     width: 210mm;
-    min-height: 297mm;
-    padding: 12mm 14mm 12mm;
+    max-width: 210mm;
+    min-height: auto;
+    margin: 0 auto;
+    padding: 10mm 12mm 10mm;
+    box-sizing: border-box;
   }
   /* Masthead */
   .masthead {
     background: #c8102e;
     color: white;
     text-align: center;
-    padding: 9px 16px 7px;
-    margin-bottom: 14px;
+    padding: 8px 14px 6px;
+    margin-bottom: 10px;
   }
   .masthead-eyebrow {
-    font-size: 10px;
-    letter-spacing: 5px;
+    font-size: 9px;
+    letter-spacing: 4px;
     text-transform: uppercase;
     opacity: 0.85;
     margin-bottom: 2px;
   }
   .masthead h1 {
     font-family: Georgia, 'Times New Roman', serif;
-    font-size: 34px;
+    font-size: 28px;
     font-weight: 900;
     letter-spacing: 2px;
     line-height: 1;
-    margin-bottom: 3px;
-  }
-  .masthead-sub {
-    font-size: 10px;
-    letter-spacing: 3px;
-    text-transform: uppercase;
-    opacity: 0.88;
+    margin-bottom: 2px;
   }
   /* Title bar */
   .title-bar {
@@ -391,44 +394,56 @@ function generatePuzzleHTML(puzzleData, showSolution = false, omaName = 'Maria')
     align-items: baseline;
     gap: 12px;
     border-bottom: 3px double #333;
-    padding-bottom: 6px;
-    margin-bottom: 14px;
+    padding-bottom: 5px;
+    margin-bottom: 10px;
   }
   .title-bar h2 {
     font-family: Georgia, serif;
-    font-size: 18px;
+    font-size: 16px;
     font-weight: 900;
     text-transform: uppercase;
     letter-spacing: 1px;
   }
   .title-dedication {
     margin-left: auto;
-    font-size: 12px;
+    font-size: 11px;
     font-style: italic;
     color: #555;
   }
-  /* Layout – grid full width, clues in two columns below */
+  /* Layout: grid ON TOP, clues ONLY below (full width, never beside the grid) */
   .layout {
     display: flex;
     flex-direction: column;
-    gap: 16px;
+    align-items: stretch;
+    width: 100%;
+    gap: 12px;
   }
-  .grid-col { flex-shrink: 0; }
+  .grid-col {
+    flex: 0 0 auto;
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+  }
   .clues-below {
+    flex: 0 0 auto;
+    width: 100%;
     display: grid;
     grid-template-columns: 1fr 1fr;
-    gap: 0 28px;
+    gap: ${clueGapPx + 2}px 20px;
     align-items: start;
-    width: 100%;
+    box-sizing: border-box;
   }
   /* Grid */
   .grid {
     display: grid;
     grid-template-columns: repeat(${gridWidth}, ${CELL}px);
-    border: 3px solid #111;
+    border: 2px solid #111;
     border-right: none;
     border-bottom: none;
     width: ${gridW}px;
+    max-width: 100%;
+    flex-shrink: 0;
   }
   .cell {
     width: ${CELL}px;
@@ -444,47 +459,48 @@ function generatePuzzleHTML(puzzleData, showSolution = false, omaName = 'Maria')
   .cell.black { background: #111; border-color: #111; }
   .num {
     position: absolute;
-    top: 2px; left: 2px;
-    font-size: 7.5px;
+    top: 1px; left: 2px;
+    font-size: ${CELL < 20 ? 5.5 : 7}px;
     font-weight: 700;
     line-height: 1;
     color: #222;
   }
   .letter {
-    font-size: 16px;
+    font-size: ${Math.max(11, CELL - 4)}px;
     font-weight: 900;
     color: #111;
     line-height: 1;
   }
   .letter.sol { color: #c8102e; }
   /* Clues */
-  .clues-section { margin-bottom: 16px; }
+  .clues-section { margin-bottom: 0; }
   .clues-heading {
-    font-size: 9px;
+    font-size: ${clueHeadPx}px;
     font-weight: 900;
-    letter-spacing: 3px;
+    letter-spacing: 2px;
     text-transform: uppercase;
     color: #c8102e;
     border-bottom: 2px solid #c8102e;
-    padding-bottom: 3px;
-    margin-bottom: 8px;
+    padding-bottom: 2px;
+    margin-bottom: 6px;
   }
   .clue {
     display: flex;
-    gap: 6px;
-    margin-bottom: 6px;
-    font-size: 13px;
-    line-height: 1.3;
+    gap: 5px;
+    margin-bottom: ${clueGapPx}px;
+    font-size: ${clueFontPx}px;
+    line-height: 1.25;
+    break-inside: avoid;
   }
-  .cn { font-weight: 900; min-width: 17px; text-align: right; color: #c8102e; flex-shrink: 0; }
-  .ct { flex: 1; }
+  .cn { font-weight: 900; min-width: 14px; text-align: right; color: #c8102e; flex-shrink: 0; }
+  .ct { flex: 1; min-width: 0; }
   /* Footer */
   .footer {
-    margin-top: 20px;
+    margin-top: 12px;
     border-top: 2px solid #c8102e;
-    padding-top: 8px;
+    padding-top: 6px;
     text-align: center;
-    font-size: 12px;
+    font-size: 10px;
     font-style: italic;
     color: #666;
   }
@@ -496,7 +512,6 @@ function generatePuzzleHTML(puzzleData, showSolution = false, omaName = 'Maria')
   <div class="masthead">
     <div class="masthead-eyebrow">✦ &nbsp; Omas Rätselheft &nbsp; ✦</div>
     <h1>Kreuzworträtsel</h1>
-    <div class="masthead-sub">Bayerische Ausgabe &nbsp;·&nbsp; Klassische Musik &amp; Genuss</div>
   </div>
 
   <div class="title-bar">
@@ -572,12 +587,25 @@ app.post('/api/pdf', async (req, res) => {
     browser = await getBrowser();
     page    = await browser.newPage();
 
+    await page.setViewport({ width: 794, height: 2200, deviceScaleFactor: 1 });
     await page.setContent(generatePuzzleHTML(puzzleData, solution, omaName), { waitUntil: 'networkidle0' });
+
+    const contentH = await page.evaluate(() => {
+      const box = document.querySelector('.page');
+      return box ? Math.ceil(box.getBoundingClientRect().height) : document.documentElement.scrollHeight;
+    });
+    // A4 printable area ≈ 1040 CSS px at 96dpi with small margins — scale down if taller (one sheet only)
+    const TARGET_ONE_PAGE_PX = 1020;
+    let pdfScale = 1;
+    if (contentH > TARGET_ONE_PAGE_PX) {
+      pdfScale = Math.max(0.5, (TARGET_ONE_PAGE_PX / contentH) * 0.98);
+    }
 
     const pdfRaw = await page.pdf({
       format: 'A4',
       printBackground: true,
-      margin: { top: '0mm', right: '0mm', bottom: '0mm', left: '0mm' },
+      margin: { top: '6mm', right: '6mm', bottom: '6mm', left: '6mm' },
+      scale: pdfScale,
     });
 
     const pdfBuf  = Buffer.isBuffer(pdfRaw) ? pdfRaw : Buffer.from(pdfRaw);
