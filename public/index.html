@@ -1360,7 +1360,7 @@
   </div>
 </div>
 
-<!-- Claude / API: Fortschritt nur noch für Stapel-ZIP -->
+<!-- Claude / API: Lade-Overlay; Stapel-ZIP zeigt Abschluss im Modal -->
 <div id="claudeQuestOverlay" class="claude-quest-overlay no-print" hidden aria-hidden="true">
   <div class="claude-quest-box" id="claudeQuestBox" role="dialog" aria-modal="true" aria-labelledby="claudeQuestTitle">
     <div id="claudeQuestLoading">
@@ -2089,19 +2089,6 @@
   let solutionVisible = false;
   let puzzleCount = 0;
 
-  function closeSettingsPanelIfOpen() {
-    const settingsPanel = document.getElementById('settingsPanel');
-    const settingsBtn = document.getElementById('settingsBtn');
-    const deckBtn = document.getElementById('deckSettingsBtn');
-    const puzzlePanel = document.getElementById('panelPuzzle');
-    if (settingsPanel?.classList.contains('open')) {
-      settingsPanel.classList.remove('open');
-      settingsBtn?.classList.remove('active');
-      deckBtn?.classList.remove('active');
-      puzzlePanel?.classList.remove('settings-open');
-    }
-  }
-
   async function generatePuzzle() {
     const btn = document.getElementById('generateBtn');
     const area = document.getElementById('puzzleArea');
@@ -2120,10 +2107,12 @@
       <div class="state-msg">
         <div class="spinner"></div>
         <h3>Rätsel wird erstellt …</h3>
-        <p>Ein Moment — gleich erscheint es hier.</p>
+        <p>Schaut ins Quest-Log — dort läuft der Zauber.</p>
       </div>`;
     hint.textContent = 'Claude arbeitet …';
+    showClaudeQuestOverlay('Claude arbeitet …');
 
+    let questOk = false;
     try {
       const res = await fetch('/api/generate', {
         method: 'POST',
@@ -2139,13 +2128,25 @@
 
       currentPuzzle = data;
       puzzleCount++;
-      closeSettingsPanelIfOpen();
+      questOk = true;
+      hideClaudeQuestOverlay();
+      const settingsPanel = document.getElementById('settingsPanel');
+      const settingsBtn = document.getElementById('settingsBtn');
+      const deckBtn = document.getElementById('deckSettingsBtn');
+      const puzzlePanel = document.getElementById('panelPuzzle');
+      if (settingsPanel?.classList.contains('open')) {
+        settingsPanel.classList.remove('open');
+        settingsBtn?.classList.remove('active');
+        deckBtn?.classList.remove('active');
+        puzzlePanel?.classList.remove('settings-open');
+      }
       renderPuzzle(data, area);
       area.classList.remove('puzzle-idle');
       footer.style.display = 'flex';
       document.getElementById('puzzleActionsBar')?.classList.add('visible');
       hint.textContent = `Rätsel Nr. ${puzzleCount} · ${data.words.length} Wörter`;
     } catch (err) {
+      hideClaudeQuestOverlay();
       area.innerHTML = `
         <div class="error-box">
           <strong>Fehler beim Erstellen des Rätsels:</strong><br>${err.message}
@@ -2156,6 +2157,7 @@
       area.classList.add('puzzle-idle');
       hint.textContent = 'Fehler – bitte erneut versuchen';
     } finally {
+      if (!questOk) hideClaudeQuestOverlay();
       btn.disabled = false;
     }
   }
