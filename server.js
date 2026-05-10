@@ -272,17 +272,32 @@ async function fetchLoesungswortPlan(settings, wordCount) {
     .filter(Boolean)
     .join('\n');
 
+  // Build avoidance list from word history so Lösungswort is also varied
+  const wordHistory = settings.wordHistory;
+  let avoidBlock = '';
+  if (wordHistory && typeof wordHistory === 'object') {
+    const usedLw = Object.entries(wordHistory)
+      .filter(([w, c]) => w.length >= 4 && typeof c === 'number' && c >= 1)
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, 40)
+      .map(([w]) => w);
+    if (usedLw.length > 0) {
+      avoidBlock = `\nBereits verwendete Lösungswörter (NICHT nochmals wählen): ${usedLw.join(', ')}\n`;
+    }
+  }
+
   const userContent = `Für ein Kreuzworträtsel mit etwa ${wordCount} Begriffen wird **zuerst** das **Lösungswort** (Heft-Stil) und ein **Hinweis** festgelegt.
 
 ${ctx}
-
+${avoidBlock}
 Antworten Sie mit **NUR** diesem JSON:
 {"loesungswort":"WORT","loesungswort_hinweis":"Kurzer Satz ohne das Wort wörtlich zu nennen"}
 
 Regeln:
 - loesungswort: **5–8** Buchstaben, deutsch, nur A–Z (Umlaute als AE, OE, UE, SS)
-- emotional passend zum Kontext
-- loesungswort_hinweis: ein Satz, liebevoll`;
+- **Abwechslungsreich und überraschend** — NICHT immer das Naheliegendste (z. B. nicht schon wieder FAMILIE, LIEBE, HEIMAT, GARTEN wenn diese schon oft genutzt wurden). Denke an: Jahreszeiten, Berufe, Orte, Natur, Essen, Musik, Farben, Tiere, Feste, Alltagsgegenstände — je nach Kontext.
+- emotional passend zum Kontext, aber frisch und unerwartet
+- loesungswort_hinweis: ein liebevoller Satz, ohne das Wort direkt zu nennen`;
 
   for (let attempt = 0; attempt < 2; attempt++) {
     try {
