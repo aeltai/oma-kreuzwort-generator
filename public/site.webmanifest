@@ -1,0 +1,19 @@
+{
+  "name": "Kreuzworträtsel für Oma",
+  "short_name": "Omas Rätsel",
+  "description": "Liebevolle Kreuzworträtsel generieren – mit Claude, PDF-Export und Stapel-ZIP für Oma und Opa.",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#f7f4ee",
+  "theme_color": "#c8102e",
+  "lang": "de",
+  "icons": [
+    {
+      "src": "/favicon.svg",
+      "type": "image/svg+xml",
+      "sizes": "any",
+      "purpose": "any maskable"
+    }
+  ]
+}

@@ -96,8 +96,9 @@ function normalizeDifficulty(code) {
 function puzzleTypePromptExtra(puzzleType) {
   if (puzzleType === 'schweden') {
     return `
-RÄTSELART „Schwedenstil“ (kompakte Hinweise – erscheinen später auch in den Startkästchen):
+RÄTSELART „Schwedenstil“ (kompakte Hinweise **nur in der nummerierten Liste** unter dem Gitter):
 - Jeder Hinweis („clue“) maximal etwa 50 Zeichen, lieber kürzer; trotzdem für Seniorinnen verständlich.
+- Im Gitter erscheinen wie üblich **nur Nummern** an Wortanfängen, keine Hinweistexte in den weißen Feldern.
 `;
   }
   if (puzzleType === 'gitter') {
@@ -124,6 +125,9 @@ function buildUserPrompt(settings = {}) {
     ? `Optionaler Vorname für warme, sparsame Ansprache in einzelnen Hinweisen: ${name}`
     : 'Kein Vorname angegeben – formulieren Sie die Hinweise allgemein herzlich (ohne fiktiven Namen).';
 
+  const wcRaw = parseInt(settings.wordCount, 10);
+  const wordCount = [16, 20, 24, 28, 32].includes(wcRaw) ? wcRaw : 24;
+
   const topics = Array.isArray(settings.topics) && settings.topics.length
     ? settings.topics
     : ['Natur & Jahreszeiten', 'Alltag & Zuhause', 'Einfache Freizeit', 'Essen & Trinken'];
@@ -133,6 +137,28 @@ function buildUserPrompt(settings = {}) {
   const useFamily     = settings.useFamilyStory !== false && familyStory.length > 0;
 
   const topicBlock = topics.map(t => `• ${t}`).join('\n');
+
+  const plannedLw = settings.plannedLoesungswort
+    ? normalise(settings.plannedLoesungswort)
+    : '';
+  const loesungBlock = plannedLw
+    ? `
+=== FIXES LÖSUNGSWORT (verbindlich) ===
+Das **Lösungswort** für das Rätselheft ist bereits festgelegt:
+
+„${plannedLw}“ (${plannedLw.length} Buchstaben)
+
+- **Jeder** dieser Buchstaben muss irgendwo in mindestens einem Ihrer ${wordCount} „word“-Einträge **als Buchstabe vorkommen** (egal an welcher Position).
+- Kommt derselbe Buchstabe im Lösungswort mehrfach vor, muss er **mindestens so oft** über **alle** „word“-Strings zusammengezählt vorkommen.
+- **Wichtig:** Planen Sie so, dass die Buchstaben **nicht alle aus einem einzigen** Ihrer Listeneinträge stammen — streuen Sie sie über **viele verschiedene** Begriffe (sonst liegen alle Markierungen später in einer Geraden im Gitter).
+=== Ende Lösungswort-Vorgabe ===
+`
+    : '';
+
+  // Scale personal/general split proportionally to wordCount
+  const personalMin = Math.round(wordCount * 0.42);
+  const generalMin  = Math.round(wordCount * 0.33);
+  const freeMax     = wordCount - personalMin - generalMin;
 
   let personalBlock = '';
   if (useFamily) {
@@ -148,11 +174,11 @@ ${familyStory}
 ${customContext ? `\nZusätzliche Wünsche vom Ersteller: ${customContext}\n` : ''}
 === Ende der persönlichen Informationen ===
 
-MISCHUNG MIT ALLGEMEINEN BEGRIFFEN (verbindliche Aufteilung der 24 Wörter):
-- Mindestens 10 Lösungswörter inkl. Hinweise sollen sich eindeutig auf die persönlichen Informationen beziehen (Familie, Orte, Berufe, Beziehungen).
-- Mindestens 8 Lösungswörter sollen klassische, leichte Allgemeinbegriffe sein, passend zu diesen Themen (nicht aus dem Familientext „abfischbar“ – echte allgemeine Begriffe wie Blume, Bach, Brot, Walzer, Sonne je nach Thema):
+MISCHUNG MIT ALLGEMEINEN BEGRIFFEN (verbindliche Aufteilung der ${wordCount} Wörter):
+- Mindestens ${personalMin} Lösungswörter inkl. Hinweise sollen sich eindeutig auf die persönlichen Informationen beziehen (Familie, Orte, Berufe, Beziehungen).
+- Mindestens ${generalMin} Lösungswörter sollen klassische, leichte Allgemeinbegriffe sein, passend zu diesen Themen (nicht aus dem Familientext „abfischbar“ – echte allgemeine Begriffe wie Blume, Bach, Brot, Walzer, Sonne je nach Thema):
 ${topicBlock}
-- Die restlichen bis 6 Einträge frei wählen (persönlich oder allgemein), damit das Gitter gut vernetzbar bleibt.
+- Die restlichen bis ${freeMax} Einträge frei wählen (persönlich oder allgemein), damit das Gitter gut vernetzbar bleibt.
 Ziel: ein ausgewogenes Rätsel – nicht nur Familie, sondern auch vertraute, „normale“ Kreuzwort-Begriffe aus den gewählten Themen.
 `;
   }
@@ -168,14 +194,14 @@ ${customContext ? `\nZusätzliche Wünsche vom Ersteller: ${customContext}\n` : 
     ? 'Zielgruppe (ohne speziellen Gesundheitsfokus): ältere Menschen; oft mit leichter kognitiver Einschränkung (z. B. Demenz). Wortwahl und Hinweise müssen zur gewählten **Schwierigkeit** passen.'
     : 'Zielgruppe und sprachliche Leitplanken: im **Gesundheits-/Unterstützungskontext** oben beschrieben (verbindlich). Wortlänge und Alltagsnähe **zusätzlich** strikt gemäß **Schwierigkeit**.';
 
-  return `Erstelle genau 24 deutsche Wörter mit jeweils einem kurzen Hinweis (Rätselfrage) für ein Kreuzworträtsel.
+  return `Erstelle genau ${wordCount} deutsche Wörter mit jeweils einem kurzen Hinweis (Rätselfrage) für ein Kreuzworträtsel.
 
 ${difficultyBlock(difficulty)}${healthProfileBlock(healthProfile)}
 ${audienceLine} Ton: warm, würdevoll, positiv, sehr klar. Keine ironischen Texte, keine unnötig schweren Begriffe.
 
 ${nameLine}
 ${name ? `Als JSON-"title" z. B. ein herzlicher Titel in Großbuchstaben, z. B. „${name.toUpperCase()}S FAMILIENRÄTSEL“ oder „EIN RÄTSEL FÜR ${name.toUpperCase()}“ — oder eine eigene passende Kurzform.` : 'Als JSON-"title" einen kurzen, herzlichen Titel (gern in Großbuchstaben, Magazinstil).'}
-${personalBlock}${generalBlock}
+${loesungBlock}${personalBlock}${generalBlock}
 ${puzzleTypePromptExtra(puzzleType)}
 
 Technische Regeln:
@@ -183,13 +209,15 @@ Technische Regeln:
 - "clue": ein kurzer, freundlicher deutscher Satz
 - Bevorzugen Sie Buchstaben E, N, R, S, T, A, I, O für gutes Vernetzen
 
-Antwortformat (NUR dieses JSON, exakt 24 Objekte in "words"):
+Antwortformat (NUR dieses JSON, exakt ${wordCount} Objekte in "words"):
 {
   "title": "Kurzer herzlicher Titel",
   "words": [
     { "word": "BEISPIEL", "clue": "Kurzer Hinweis" }
   ]
-}`;
+}
+
+${plannedLw ? 'Liefern Sie **kein** Lösungswort-Feld in JSON — es ist oben bereits festgelegt.' : 'Kein Lösungswort in dieser Antwort — es wird separat festgelegt.'}`;
 }
 
 // ---------------------------------------------------------------------------
@@ -207,123 +235,457 @@ function stripJson(text) {
   return text.trim().replace(/^```(?:json)?\s*/i, '').replace(/\s*```$/i, '').trim();
 }
 
+/** Phase 0: Lösungswort + Hinweis vor der Wortliste (damit Buchstaben gezielt in Begriffe einbaubar sind). */
+async function fetchLoesungswortPlan(settings, wordCount) {
+  const name = (settings.name || '').trim();
+  const topics = Array.isArray(settings.topics) && settings.topics.length
+    ? settings.topics
+    : ['Alltag', 'Familie', 'Natur'];
+  const familyStory = (settings.familyStory || '').trim().slice(0, 650);
+  const customContext = (settings.customContext || '').trim().slice(0, 450);
+  const ctx = [
+    name && `Vorname (wenn passend): ${name}`,
+    `Themen: ${topics.join(', ')}`,
+    familyStory && `Lebens-/Familienkontext: ${familyStory}`,
+    customContext && `Zusätzliche Wünsche: ${customContext}`,
+  ]
+    .filter(Boolean)
+    .join('\n');
+
+  const userContent = `Für ein Kreuzworträtsel mit etwa ${wordCount} Begriffen wird **zuerst** das **Lösungswort** (Heft-Stil) und ein **Hinweis** festgelegt.
+
+${ctx}
+
+Antworten Sie mit **NUR** diesem JSON:
+{"loesungswort":"WORT","loesungswort_hinweis":"Kurzer Satz ohne das Wort wörtlich zu nennen"}
+
+Regeln:
+- loesungswort: **5–8** Buchstaben, deutsch, nur A–Z (Umlaute als AE, OE, UE, SS)
+- emotional passend zum Kontext
+- loesungswort_hinweis: ein Satz, liebevoll`;
+
+  for (let attempt = 0; attempt < 2; attempt++) {
+    try {
+      const msg = await client.messages.create({
+        model: 'claude-opus-4-5',
+        max_tokens: 400,
+        system: SYSTEM_PROMPT,
+        messages: [{ role: 'user', content: userContent }],
+      });
+      const data = JSON.parse(stripJson(msg.content[0].text));
+      const lw = data.loesungswort != null ? normalise(data.loesungswort) : '';
+      const hint = String(data.loesungswort_hinweis || data.loesungswortHinweis || '').trim();
+      if (lw.length >= 4 && lw.length <= 10 && hint) {
+        return { loesungswort: lw, loesungswortHinweis: hint };
+      }
+    } catch (e) {
+      console.warn('Lösungswort Plan attempt', attempt, e.message);
+    }
+  }
+  return null;
+}
+
+function lettersCoveredByWords(wordObjects, lw) {
+  const lwNorm = normalise(lw);
+  if (!lwNorm) return false;
+  const need = {};
+  for (const ch of lwNorm) need[ch] = (need[ch] || 0) + 1;
+  const have = {};
+  for (const w of wordObjects) {
+    for (const ch of w.word) have[ch] = (have[ch] || 0) + 1;
+  }
+  for (const ch of Object.keys(need)) {
+    if ((have[ch] || 0) < need[ch]) return false;
+  }
+  return true;
+}
+
+function shuffleInPlace(a) {
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+
+/** Alle markierten Zellen in einer Geraden (eine waagerechte oder senkrechte Linie ohne Lücke) — typisch ein Listenwort. */
+function isSingleContiguousStraightLine(points) {
+  if (points.length <= 1) return false;
+  const rs = points.map(p => p.r);
+  const cs = points.map(p => p.c);
+  if (new Set(rs).size === 1) {
+    const sorted = [...cs].sort((a, b) => a - b);
+    const min = sorted[0];
+    for (let i = 0; i < sorted.length; i++) {
+      if (sorted[i] !== min + i) return false;
+    }
+    return true;
+  }
+  if (new Set(cs).size === 1) {
+    const sorted = [...rs].sort((a, b) => a - b);
+    const min = sorted[0];
+    for (let i = 0; i < sorted.length; i++) {
+      if (sorted[i] !== min + i) return false;
+    }
+    return true;
+  }
+  return false;
+}
+
+function manhattanPairSum(points) {
+  let s = 0;
+  for (let i = 0; i < points.length; i++) {
+    for (let j = i + 1; j < points.length; j++) {
+      s += Math.abs(points[i].r - points[j].r) + Math.abs(points[i].c - points[j].c);
+    }
+  }
+  return s;
+}
+
+/**
+ * Wählt pro Lösungswort-Buchstaben eine Gitterzelle (aus den gelegten Wörtern), eindeutige Zellen,
+ * bevorzugt **Streuung**; verbietet „alles in einer durchgehenden Linie“.
+ */
+function pickScatteredLoesungswortQuelle(placedWords, lwRaw) {
+  const lw = normalise(lwRaw);
+  if (!lw || !placedWords.length) return null;
+
+  const byK = [];
+  for (let k = 0; k < lw.length; k++) {
+    const ch = lw[k];
+    const opts = [];
+    for (const entry of placedWords) {
+      for (let idx = 0; idx < entry.word.length; idx++) {
+        if (entry.word[idx] === ch) {
+          const r = entry.direction === 'down' ? entry.row + idx : entry.row;
+          const c = entry.direction === 'across' ? entry.col + idx : entry.col;
+          opts.push({ entry, idx, r, c });
+        }
+      }
+    }
+    if (!opts.length) return null;
+    byK.push(opts);
+  }
+
+  const REST = 500;
+  const REST_RELAX = 300;
+  let best = null;
+  let bestScore = -1e9;
+
+  function tryAssign(requireSpread) {
+    const order = lw.split('').map((_, i) => i);
+    shuffleInPlace(order);
+    const picked = new Array(lw.length);
+    const used = new Set();
+    let failed = false;
+    for (const k of order) {
+      const opts = [...byK[k]];
+      shuffleInPlace(opts);
+      let choice = null;
+      for (const o of opts) {
+        const key = `${o.r},${o.c}`;
+        if (!used.has(key)) {
+          choice = o;
+          break;
+        }
+      }
+      if (!choice) {
+        failed = true;
+        break;
+      }
+      picked[k] = choice;
+      used.add(`${choice.r},${choice.c}`);
+    }
+    if (failed) return;
+    const pts = picked.map(p => ({ r: p.r, c: p.c }));
+    if (requireSpread && isSingleContiguousStraightLine(pts)) return;
+    const rowU = new Set(pts.map(p => p.r)).size;
+    const colU = new Set(pts.map(p => p.c)).size;
+    const wordU = new Set(picked.map(p => p.entry.word)).size;
+    const dist = manhattanPairSum(pts);
+    const score = dist + 10 * rowU * colU + 4 * wordU;
+    if (score > bestScore) {
+      bestScore = score;
+      best = picked;
+    }
+  }
+
+  for (let i = 0; i < REST; i++) tryAssign(true);
+  if (!best) {
+    for (let i = 0; i < REST_RELAX; i++) tryAssign(false);
+  }
+  if (!best) return null;
+
+  return best.map(p => ({
+    word: p.entry.word,
+    buchstabe_index: p.idx,
+  }));
+}
+
+function buildLoesungswortQuelleOnlyPrompt(placedWords, fixedLoesungswort, title, settings = {}) {
+  const puzzleType = ['standard', 'schweden', 'gitter'].includes(settings.puzzleType)
+    ? settings.puzzleType
+    : 'standard';
+  const rows = [...placedWords]
+    .sort((a, b) =>
+      a.number !== b.number ? a.number - b.number : String(a.direction).localeCompare(String(b.direction)))
+    .map(w => ({
+      number: w.number,
+      direction: w.direction,
+      word: w.word,
+      clue: String(w.clue || '').slice(0, 160),
+    }));
+
+  const lw = normalise(fixedLoesungswort);
+  return `Das Kreuzworträtsel ist gelegt. Titel: ${title || 'Rätsel'}
+
+${puzzleTypePromptExtra(puzzleType)}
+
+**Lösungswort ist fest:** „${lw}“ (${lw.length} Buchstaben in dieser exakten Reihenfolge).
+
+=== EINTRÄGE (nur diese "word"-Strings verwenden) ===
+${JSON.stringify(rows, null, 2)}
+
+Geben Sie **nur** "loesungswort_quelle" zurück — ein JSON-Array mit **${lw.length}** Objekten. Jedes Objekt: { "word": "...", "buchstabe_index": n }
+- Position k im Lösungswort (0-basiert) = Buchstabe lw[k]; "word"+"buchstabe_index" muss diesen Buchstaben liefern.
+- **Keine Gitterzelle doppelt.**
+- **Streuen Sie stark:** nutzen Sie **viele verschiedene** Wörter; **vermeiden Sie**, dass alle Indices aus **einem einzigen** waagerechten oder senkrechten Wort stammen (keine durchgehende Linie im Gitter).
+
+Antwort: **NUR** JSON dieser Form:
+{"loesungswort_quelle":[{ "word": "X", "buchstabe_index": 0 }]}
+(Array-Länge exakt ${lw.length})`;
+}
+
+async function fetchLoesungswortQuelleOnlyAfterPlacement(placedWords, fixedLw, title, settings) {
+  if (!placedWords.length || !fixedLw) return null;
+  const userContent = buildLoesungswortQuelleOnlyPrompt(placedWords, fixedLw, title, settings);
+  for (let attempt = 0; attempt < 2; attempt++) {
+    try {
+      const msg = await client.messages.create({
+        model: 'claude-opus-4-5',
+        max_tokens: 2000,
+        system: SYSTEM_PROMPT,
+        messages: [{ role: 'user', content: userContent }],
+      });
+      const data = JSON.parse(stripJson(msg.content[0].text));
+      const quelle = data.loesungswort_quelle || data.loesungswortQuelle || null;
+      const lw = normalise(fixedLw);
+      if (Array.isArray(quelle) && quelle.length === lw.length) {
+        return { quelle };
+      }
+    } catch (e) {
+      console.warn('Lösungswort Quelle-only attempt', attempt, e.message);
+    }
+  }
+  return null;
+}
+
+function buildLoesungswortAfterPlacementPrompt(placedWords, title, settings = {}) {
+  const puzzleType = ['standard', 'schweden', 'gitter'].includes(settings.puzzleType)
+    ? settings.puzzleType
+    : 'standard';
+  const rows = [...placedWords]
+    .sort((a, b) =>
+      a.number !== b.number ? a.number - b.number : String(a.direction).localeCompare(String(b.direction)))
+    .map(w => ({
+      number: w.number,
+      direction: w.direction,
+      word: w.word,
+      clue: String(w.clue || '').slice(0, 200),
+    }));
+
+  const name = (settings.name || '').trim();
+  const dedication = name ? `Beziehen Sie den Vornamen „${name}“ ein, wenn es zum Thema passt.` : '';
+
+  return `Das Kreuzworträtsel ist **fertig gelegt**. Sie kennen **exakt** alle Lösungswörter, **Rätselnummer**, **Richtung** (across = waagerecht, down = senkrecht) und **Hinweis**.
+
+Titel: ${title || 'Rätsel'}
+${dedication}
+
+${puzzleTypePromptExtra(puzzleType)}
+
+=== ALLE EINTRÄGE (nur diese "word"-Strings in "loesungswort_quelle" verwenden) ===
+${JSON.stringify(rows, null, 2)}
+=== Ende Liste ===
+
+Erzeugen Sie ein **Lösungswort** im Rätselheft-Stil: thematisch passend, **nicht** zwingend ein 1:1-Kopie eines Listenworts. Die Spielerinnen lesen die Buchstaben später aus **gekennzeichneten** Gitterfeldern — Sie ordnen jedem Buchstaben des Lösungsworts **einen** Buchstaben **eines** der Listeneinträge zu.
+
+Antworten Sie mit **NUR** diesem JSON (kein Markdown, keine Erklärung):
+{
+  "loesungswort": "BEISPIEL",
+  "loesungswort_hinweis": "Ein kurzer, liebevoller Satz – ohne das Lösungswort wörtlich zu nennen.",
+  "loesungswort_quelle": [
+    { "word": "EINTAG", "buchstabe_index": 0 }
+  ]
+}
+
+Regeln:
+- "loesungswort": 4–9 Buchstaben, nur A–Z; Umlaute als AE, OE, UE; SS statt ß
+- "loesungswort_quelle": genau so viele Objekte wie "loesungswort" Buchstaben
+- Jedes "word" muss **identisch** zu einem "word" in der Liste oben sein (gleiche Normalisierung)
+- "buchstabe_index": **0** = erster Buchstabe dieses Wortes, **1** = zweiter, …; muss zum jeweiligen Buchstaben in "loesungswort" passen
+- **Keine Zelle doppelt**: dieselbe physische Gitterposition darf nicht zweimal vorkommen
+- Bevorzugen Sie Buchstaben an **Kreuzungen**
+- "loesungswort_hinweis": emotional passend, Lösungswort nicht wörtlich nennen`;
+}
+
+async function fetchLoesungswortAfterPlacement(placedWords, title, settings) {
+  if (!placedWords || !placedWords.length) return null;
+  const userContent = buildLoesungswortAfterPlacementPrompt(placedWords, title, settings);
+  for (let attempt = 0; attempt < 2; attempt++) {
+    try {
+      const msg = await client.messages.create({
+        model: 'claude-opus-4-5',
+        max_tokens: 1200,
+        system: SYSTEM_PROMPT,
+        messages: [{ role: 'user', content: userContent }],
+      });
+      const data = JSON.parse(stripJson(msg.content[0].text));
+      const lw = data.loesungswort != null ? normalise(data.loesungswort) : '';
+      const hint = String(data.loesungswort_hinweis || data.loesungswortHinweis || '').trim();
+      const quelle = data.loesungswort_quelle || data.loesungswortQuelle || null;
+      if (lw.length >= 4 && lw.length <= 12 && Array.isArray(quelle) && quelle.length === lw.length) {
+        return { loesungswort: lw, hint, quelle };
+      }
+    } catch (e) {
+      console.warn('Lösungswort phase-2 attempt', attempt, e.message);
+    }
+  }
+  return null;
+}
+
 // ---------------------------------------------------------------------------
 // Crossword placement algorithm  (exhaustive search, densely-connected)
 // ---------------------------------------------------------------------------
 
 function placeCrossword(wordObjects) {
-  // Grid size: large enough for ~20 words, small enough to stay dense
-  const SIZE = 21;
+  const nWords = wordObjects.length;
+  // Adaptive grid size — keeps the puzzle dense without wasting space
+  const SIZE = nWords <= 18 ? 15 : nWords <= 24 ? 17 : nWords <= 30 ? 19 : 21;
 
-  const grid = Array.from({ length: SIZE }, () => Array(SIZE).fill(null));
-  // dirGrid[r][c] = 'across' | 'down' | 'both' | null — tracks which direction(s) occupy a cell
-  const dirGrid = Array.from({ length: SIZE }, () => Array(SIZE).fill(null));
-  const placed = [];
-
-  function hasLetter(r, c) {
-    return r >= 0 && r < SIZE && c >= 0 && c < SIZE && grid[r][c] !== null;
-  }
-
-  // Returns number of crossings if placement is valid, or -1 if invalid
-  function evaluatePlace(word, row, col, dir) {
-    const endR = dir === 'down' ? row + word.length - 1 : row;
-    const endC = dir === 'across' ? col + word.length - 1 : col;
-
-    if (row < 0 || col < 0 || endR >= SIZE || endC >= SIZE) return -1;
-
-    // no letter immediately before/after in the same direction (prevents word-merging)
-    if (dir === 'across') {
-      if (hasLetter(row, col - 1))          return -1;
-      if (hasLetter(row, col + word.length)) return -1;
-    } else {
-      if (hasLetter(row - 1, col))          return -1;
-      if (hasLetter(row + word.length, col)) return -1;
-    }
-
-    let crossings = 0;
-
-    for (let i = 0; i < word.length; i++) {
-      const r = dir === 'down' ? row + i : row;
-      const c = dir === 'across' ? col + i : col;
-      const existing = grid[r][c];
-
-      if (existing !== null) {
-        // Cell occupied — letter must match
-        if (existing !== word[i]) return -1;
-        // Must have been placed by a word going the OTHER direction
-        const cellDir = dirGrid[r][c];
-        if (cellDir === dir) return -1;           // same direction overlap → invalid
-        crossings++;
-      } else {
-        // Empty cell — no parallel neighbour allowed (prevents ghost words)
-        if (dir === 'across') {
-          if (hasLetter(r - 1, c) || hasLetter(r + 1, c)) return -1;
-        } else {
-          if (hasLetter(r, c - 1) || hasLetter(r, c + 1)) return -1;
-        }
-      }
-    }
-
-    // First word: no crossings needed. Every subsequent word needs ≥ 1.
-    if (placed.length > 0 && crossings === 0) return -1;
-
-    return crossings;
-  }
-
-  function commitWord(wordObj, row, col, dir) {
-    const { word } = wordObj;
-    for (let i = 0; i < word.length; i++) {
-      const r = dir === 'down' ? row + i : row;
-      const c = dir === 'across' ? col + i : col;
-      grid[r][c] = word[i];
-      // track direction: mark 'both' if already occupied by opposite direction
-      dirGrid[r][c] = dirGrid[r][c] && dirGrid[r][c] !== dir ? 'both' : dir;
-    }
-    placed.push({ ...wordObj, row, col, direction: dir });
-  }
-
-  // Sort longest first — longer words offer more crossing opportunities
+  // Sort longest-first for the base ordering (long words = more crossing chances)
   const sorted = [...wordObjects].sort((a, b) => b.word.length - a.word.length);
 
-  // Place first word horizontally through the centre
-  const first = sorted[0];
-  commitWord(first, Math.floor(SIZE / 2), Math.floor((SIZE - first.word.length) / 2), 'across');
+  // --- Inner placement function (one attempt with a given word ordering) ---
+  function tryPlacement(ordering) {
+    const grid    = Array.from({ length: SIZE }, () => Array(SIZE).fill(null));
+    const dirGrid = Array.from({ length: SIZE }, () => Array(SIZE).fill(null));
+    const placed  = [];
 
-  // --- Exhaustive search for every subsequent word ---
-  // Score = crossings² × 100  (strongly rewards 2+ crossings)
-  //       − distance from centre × 0.4  (keeps puzzle compact)
-  for (let wi = 1; wi < sorted.length; wi++) {
-    const wordObj = sorted[wi];
-    const word = wordObj.word;
-    let best = null;
-    let bestScore = -Infinity;
+    function hasLetter(r, c) {
+      return r >= 0 && r < SIZE && c >= 0 && c < SIZE && grid[r][c] !== null;
+    }
 
-    for (const dir of ['across', 'down']) {
-      for (let r = 0; r < SIZE; r++) {
-        for (let c = 0; c < SIZE; c++) {
-          const crossings = evaluatePlace(word, r, c, dir);
-          if (crossings < 0) continue;                    // invalid
+    // Returns crossing count if valid, -1 otherwise
+    function evaluatePlace(word, row, col, dir) {
+      const endR = dir === 'down'   ? row + word.length - 1 : row;
+      const endC = dir === 'across' ? col + word.length - 1 : col;
+      if (row < 0 || col < 0 || endR >= SIZE || endC >= SIZE) return -1;
 
-          const dist  = Math.abs(r - SIZE / 2) + Math.abs(c - SIZE / 2);
-          const score = crossings * crossings * 100 - dist * 0.4;
+      // No letter immediately before/after (prevents word-merging)
+      if (dir === 'across') {
+        if (hasLetter(row, col - 1))           return -1;
+        if (hasLetter(row, col + word.length))  return -1;
+      } else {
+        if (hasLetter(row - 1, col))            return -1;
+        if (hasLetter(row + word.length, col))  return -1;
+      }
 
-          if (score > bestScore) {
-            bestScore = score;
-            best = { row: r, col: c, direction: dir };
+      let crossings = 0;
+      for (let i = 0; i < word.length; i++) {
+        const r = dir === 'down'   ? row + i : row;
+        const c = dir === 'across' ? col + i : col;
+        const existing = grid[r][c];
+        if (existing !== null) {
+          if (existing !== word[i]) return -1;
+          if (dirGrid[r][c] === dir) return -1; // same-direction overlap
+          crossings++;
+        } else {
+          // No parallel neighbour in empty cells
+          if (dir === 'across') {
+            if (hasLetter(r - 1, c) || hasLetter(r + 1, c)) return -1;
+          } else {
+            if (hasLetter(r, c - 1) || hasLetter(r, c + 1)) return -1;
           }
         }
       }
+      if (placed.length > 0 && crossings === 0) return -1;
+      return crossings;
     }
 
-    if (best) commitWord(wordObj, best.row, best.col, best.direction);
+    function commitWord(wordObj, row, col, dir) {
+      const { word } = wordObj;
+      for (let i = 0; i < word.length; i++) {
+        const r = dir === 'down'   ? row + i : row;
+        const c = dir === 'across' ? col + i : col;
+        grid[r][c] = word[i];
+        dirGrid[r][c] = dirGrid[r][c] && dirGrid[r][c] !== dir ? 'both' : dir;
+      }
+      placed.push({ ...wordObj, row, col, direction: dir });
+    }
+
+    // First word: horizontal through centre
+    const first = ordering[0];
+    commitWord(first, Math.floor(SIZE / 2), Math.floor((SIZE - first.word.length) / 2), 'across');
+
+    // Remaining words: exhaustive search, strongly penalise distance from centre
+    for (let wi = 1; wi < ordering.length; wi++) {
+      const wordObj = ordering[wi];
+      const word    = wordObj.word;
+      let best      = null;
+      let bestScore = -Infinity;
+
+      for (const dir of ['across', 'down']) {
+        for (let r = 0; r < SIZE; r++) {
+          for (let c = 0; c < SIZE; c++) {
+            const crossings = evaluatePlace(word, r, c, dir);
+            if (crossings < 0) continue;
+            // Reward multiple crossings strongly; punish distance from centre hard
+            const dist  = Math.abs(r - SIZE / 2) + Math.abs(c - SIZE / 2);
+            const score = crossings * crossings * 100 - dist * 2.5;
+            if (score > bestScore) { bestScore = score; best = { row: r, col: c, direction: dir }; }
+          }
+        }
+      }
+      if (best) commitWord(wordObj, best.row, best.col, best.direction);
+    }
+    return placed;
   }
 
-  if (placed.length < 10) return null;
+  // --- Run up to 8 attempts with shuffled orderings; keep the best result ---
+  let bestPlaced = null;
+  let bestCount  = 0;
+  const minGood  = Math.floor(nWords * 0.88);
+
+  for (let attempt = 0; attempt < 8; attempt++) {
+    let ordering;
+    if (attempt === 0) {
+      ordering = sorted; // deterministic first pass
+    } else {
+      // Keep the 2 longest words first, shuffle the rest
+      const top  = sorted.slice(0, 2);
+      const rest = [...sorted.slice(2)];
+      for (let i = rest.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [rest[i], rest[j]] = [rest[j], rest[i]];
+      }
+      ordering = [...top, ...rest];
+    }
+
+    const placed = tryPlacement(ordering);
+    if (placed.length > bestCount) {
+      bestCount  = placed.length;
+      bestPlaced = placed;
+      if (bestCount >= minGood) break; // good enough — stop early
+    }
+  }
+
+  if (!bestPlaced || bestPlaced.length < 10) return null;
 
   // Trim to bounding box
   let minR = SIZE, maxR = 0, minC = SIZE, maxC = 0;
-  for (const p of placed) {
-    const eR = p.direction === 'down' ? p.row + p.word.length - 1 : p.row;
+  for (const p of bestPlaced) {
+    const eR = p.direction === 'down'   ? p.row + p.word.length - 1 : p.row;
     const eC = p.direction === 'across' ? p.col + p.word.length - 1 : p.col;
     minR = Math.min(minR, p.row); maxR = Math.max(maxR, eR);
     minC = Math.min(minC, p.col); maxC = Math.max(maxC, eC);
@@ -332,7 +694,7 @@ function placeCrossword(wordObjects) {
   return {
     gridWidth:  maxC - minC + 1,
     gridHeight: maxR - minR + 1,
-    words: placed.map(p => ({ ...p, row: p.row - minR, col: p.col - minC })),
+    words: bestPlaced.map(p => ({ ...p, row: p.row - minR, col: p.col - minC })),
   };
 }
 
@@ -361,6 +723,139 @@ function numberWords(words) {
   }
 }
 
+/**
+ * Resolve 0-based character index; accept sloppy 1-based if it matches expected letter.
+ */
+function resolveCharIndexInWord(entry, idxRaw, expectedChar) {
+  let idx = parseInt(idxRaw, 10);
+  if (!Number.isFinite(idx)) return -1;
+  const w = entry.word;
+  if (idx >= 0 && idx < w.length && w[idx] === expectedChar) return idx;
+  if (idx >= 1 && idx <= w.length && w[idx - 1] === expectedChar) return idx - 1;
+  return -1;
+}
+
+function normaliseLetterSources(raw) {
+  if (!Array.isArray(raw)) return null;
+  return raw.map(item => ({
+    word: normalise(item.word || item.wort || ''),
+    buchstabe_index: item.buchstabe_index ?? item.index ?? item.i ?? item.char_index,
+  }));
+}
+
+/**
+ * Lösungswort: Buchstaben aus gewählten Gitterfeldern (Heft-Stil), sonst Fallback: ein volles Wort.
+ */
+function buildLoesungswortMeta(placedWords, requestedWord, requestedHint, letterSourcesRaw) {
+  const lw = normalise(requestedWord || '');
+  let hint = String(requestedHint || '').trim();
+  const letterSources = normaliseLetterSources(letterSourcesRaw);
+
+  const scatterHintDefault =
+    'Die kleinen Ziffern in den türkisen Marken unten rechts in den Kästchen (1, 2, 3 …) geben die Reihenfolge. Lesen Sie die Buchstaben nacheinander — so ergibt sich das Lösungswort.';
+
+  if (letterSources && letterSources.length === lw.length && lw.length > 0 && placedWords.length) {
+    const cells = [];
+    let ok = true;
+    for (let k = 0; k < lw.length; k++) {
+      const src = letterSources[k];
+      const entry = placedWords.find(w => w.word === src.word);
+      if (!entry) {
+        ok = false;
+        break;
+      }
+      const idx = resolveCharIndexInWord(entry, src.buchstabe_index, lw[k]);
+      if (idx < 0) {
+        ok = false;
+        break;
+      }
+      const r = entry.direction === 'down' ? entry.row + idx : entry.row;
+      const c = entry.direction === 'across' ? entry.col + idx : entry.col;
+      cells.push({ row: r, col: c, n: k + 1 });
+    }
+    if (ok) {
+      const seen = new Set();
+      for (const cell of cells) {
+        const key = `${cell.row},${cell.col}`;
+        if (seen.has(key)) {
+          ok = false;
+          break;
+        }
+        seen.add(key);
+      }
+    }
+    if (ok && lw.length >= 4 && isSingleContiguousStraightLine(cells.map(({ row, col }) => ({ r: row, c: col })))) {
+      const scattered = pickScatteredLoesungswortQuelle(placedWords, lw);
+      if (scattered) {
+        cells.length = 0;
+        for (let k = 0; k < lw.length; k++) {
+          const src = scattered[k];
+          const entry = placedWords.find(w => w.word === src.word);
+          const idx = resolveCharIndexInWord(entry, src.buchstabe_index, lw[k]);
+          const r = entry.direction === 'down' ? entry.row + idx : entry.row;
+          const c = entry.direction === 'across' ? entry.col + idx : entry.col;
+          cells.push({ row: r, col: c, n: k + 1 });
+        }
+        const seen2 = new Set();
+        for (const cell of cells) {
+          const key = `${cell.row},${cell.col}`;
+          if (seen2.has(key)) {
+            ok = false;
+            break;
+          }
+          seen2.add(key);
+        }
+      }
+    }
+    if (ok) {
+      if (!hint) hint = scatterHintDefault;
+      return {
+        loesungswort: lw,
+        loesungswortHinweis: hint,
+        loesungswortCells: cells.map(({ row, col, n }) => ({ row, col, n })),
+        loesungswortNumber: null,
+        loesungswortDirection: null,
+        loesungswortScatter: true,
+      };
+    }
+  }
+
+  let entry = placedWords.find(w => w.word === lw);
+  if (!entry && placedWords.length) {
+    entry = [...placedWords].sort((a, b) => b.word.length - a.word.length)[0];
+  }
+  if (!entry) {
+    return {
+      loesungswort: '',
+      loesungswortHinweis: '',
+      loesungswortCells: [],
+      loesungswortNumber: null,
+      loesungswortDirection: null,
+      loesungswortScatter: false,
+    };
+  }
+
+  if (!hint) {
+    hint = scatterHintDefault;
+  }
+
+  const loesungswortCells = [];
+  for (let i = 0; i < entry.word.length; i++) {
+    const r = entry.direction === 'down' ? entry.row + i : entry.row;
+    const c = entry.direction === 'across' ? entry.col + i : entry.col;
+    loesungswortCells.push({ row: r, col: c, n: i + 1 });
+  }
+
+  return {
+    loesungswort: entry.word,
+    loesungswortHinweis: hint,
+    loesungswortCells,
+    loesungswortNumber: null,
+    loesungswortDirection: null,
+    loesungswortScatter: true,
+  };
+}
+
 // ---------------------------------------------------------------------------
 // API endpoint
 // ---------------------------------------------------------------------------
@@ -371,14 +866,29 @@ app.post('/api/generate', async (req, res) => {
     const puzzleType = ['standard', 'schweden', 'gitter'].includes(settings.puzzleType)
       ? settings.puzzleType
       : 'standard';
-    const userPrompt = buildUserPrompt({ ...settings, puzzleType });
+    const wcRaw = parseInt(settings.wordCount, 10);
+    const wordCount = [16, 20, 24, 28, 32].includes(wcRaw) ? wcRaw : 24;
+
+    const loesPlan = await fetchLoesungswortPlan(settings, wordCount);
+    const plannedLw = loesPlan ? loesPlan.loesungswort : '';
+    const plannedHint = loesPlan ? loesPlan.loesungswortHinweis : '';
+
+    const userPrompt = buildUserPrompt({
+      ...settings,
+      puzzleType,
+      wordCount,
+      plannedLoesungswort: plannedLw,
+    });
     let wordObjects = null;
     let title = 'Kreuzworträtsel';
+
+    const maxTokens = Math.min(2800, 1180 + wordCount * 30);
+    const minAcceptable = Math.floor(wordCount * 0.75);
 
     for (let attempt = 0; attempt < 2; attempt++) {
       const msg = await client.messages.create({
         model: 'claude-opus-4-5',
-        max_tokens: 1600,
+        max_tokens: maxTokens,
         system: SYSTEM_PROMPT,
         messages: [{ role: 'user', content: userPrompt }],
       });
@@ -393,7 +903,9 @@ app.post('/api/generate', async (req, res) => {
           .map(w => ({ word: normalise(w.word), clue: String(w.clue || '') }))
           .filter(w => w.word.length >= 4 && w.word.length <= 10 && w.clue);
 
-        if (wordObjects.length >= 18) break;
+        if (wordObjects.length >= minAcceptable) {
+          if (!plannedLw || lettersCoveredByWords(wordObjects, plannedLw)) break;
+        }
       } catch (e) {
         console.warn('JSON parse error, retrying:', e.message, raw.slice(0, 100));
       }
@@ -401,6 +913,11 @@ app.post('/api/generate', async (req, res) => {
 
     if (!wordObjects || wordObjects.length < 6) {
       return res.status(500).json({ error: 'Zu wenige Wörter von Claude erhalten. Bitte erneut versuchen.' });
+    }
+
+    const useLoesPlan = !!(plannedLw && lettersCoveredByWords(wordObjects, plannedLw));
+    if (plannedLw && !useLoesPlan) {
+      console.warn('Geplantes Lösungswort nicht durch Buchstaben in Wortliste abgedeckt — nutze Fallback ohne Vorplan.');
     }
 
     // Remove duplicate words
@@ -419,7 +936,38 @@ app.post('/api/generate', async (req, res) => {
 
     numberWords(result.words);
 
-    res.json({ title, puzzleType, ...result });
+    let lwMeta;
+    if (useLoesPlan) {
+      let quelle = pickScatteredLoesungswortQuelle(result.words, plannedLw);
+      if (!quelle) {
+        const qOnly = await fetchLoesungswortQuelleOnlyAfterPlacement(
+          result.words,
+          plannedLw,
+          title,
+          { ...settings, puzzleType }
+        );
+        quelle = qOnly ? qOnly.quelle : null;
+      }
+      lwMeta = buildLoesungswortMeta(
+        result.words,
+        plannedLw,
+        plannedHint,
+        quelle
+      );
+    } else {
+      const lwAi = await fetchLoesungswortAfterPlacement(result.words, title, {
+        ...settings,
+        puzzleType,
+      });
+      lwMeta = buildLoesungswortMeta(
+        result.words,
+        lwAi ? lwAi.loesungswort : '',
+        lwAi ? lwAi.hint : '',
+        lwAi ? lwAi.quelle : null
+      );
+    }
+
+    res.json({ title, puzzleType, ...result, ...lwMeta });
   } catch (err) {
     console.error('Fehler:', err);
     res.status(500).json({ error: err.message });
@@ -430,27 +978,17 @@ app.post('/api/generate', async (req, res) => {
 // Standalone HTML renderer for Puppeteer
 // ---------------------------------------------------------------------------
 
-function clueShort(text, maxLen) {
-  const t = String(text || '').trim();
-  if (t.length <= maxLen) return t;
-  return `${t.slice(0, Math.max(1, maxLen - 1)).trim()}…`;
-}
-
-function swedenCellInner(wordsHere, esc, showSolution, letter) {
-  const wa = wordsHere.find(w => w.direction === 'across');
-  const wd = wordsHere.find(w => w.direction === 'down');
-  let inner = '';
-  if (wa) inner += `<div class="sw-line"><span class="arr">→</span>${esc(clueShort(wa.clue, 54))}</div>`;
-  if (wd) inner += `<div class="sw-line"><span class="arr">↓</span>${esc(clueShort(wd.clue, 54))}</div>`;
-  const letterHtml = showSolution
-    ? `<span class="letter sol">${letter}</span>`
-    : `<span class="letter"></span>`;
-  return `<div class="sweden-clues">${inner}</div>${letterHtml}`;
-}
-
 function generatePuzzleHTML(puzzleData, showSolution = false, omaName = '', issueNo = null) {
   const { title, gridWidth, gridHeight, words } = puzzleData;
   const nWords = words.length;
+  const loesW = puzzleData.loesungswort || '';
+  const loesH = puzzleData.loesungswortHinweis || '';
+  const loesCells = puzzleData.loesungswortCells || [];
+  const loesOrderMap = {};
+  loesCells.forEach((cell, i) => {
+    const ord = cell.n ?? cell.order ?? i + 1;
+    loesOrderMap[`${cell.row},${cell.col}`] = ord;
+  });
 
   const puzzleType = ['standard', 'schweden', 'gitter'].includes(puzzleData.puzzleType)
     ? puzzleData.puzzleType
@@ -484,7 +1022,7 @@ function generatePuzzleHTML(puzzleData, showSolution = false, omaName = '', issu
   // ~usable content width inside A4 (px @ 96dpi) — shrink cell size so wide grids fit
   const usableWpx = 540;
   const COL_PX = Math.max(13, Math.min(34, Math.floor(usableWpx / Math.max(1, gridWidth))));
-  const ROW_PX = puzzleType === 'schweden' ? Math.min(COL_PX + 22, 58) : COL_PX;
+  const ROW_PX = COL_PX;
 
   // Tighter clue typography when many words (helps single-page PDF)
   const clueFontPx = nWords > 22 ? 9.5 : nWords > 16 ? 10.5 : 12;
@@ -502,22 +1040,14 @@ function generatePuzzleHTML(puzzleData, showSolution = false, omaName = '', issu
       }
       const key = `${r},${c}`;
       const num = numMap[key];
-      const wordsHere = words.filter(w => w.row === r && w.col === c);
-      const isStart = wordsHere.length > 0;
-      let cellClass = 'cell';
-      if (puzzleType === 'schweden' && isStart) cellClass += ' cell-sweden';
-
-      let inner;
-      if (puzzleType === 'schweden' && isStart) {
-        inner = swedenCellInner(wordsHere, esc, showSolution, letter);
-      } else {
-        const numHtml = (puzzleType !== 'gitter' && num) ? `<span class="num">${num}</span>` : '';
-        const letterHtml = showSolution
-          ? `<span class="letter sol">${letter}</span>`
-          : `<span class="letter"></span>`;
-        inner = `${numHtml}${letterHtml}`;
-      }
-      gridCells += `<div class="${cellClass}">${inner}</div>`;
+      const numHtml = (puzzleType !== 'gitter' && num) ? `<span class="num">${num}</span>` : '';
+      const loesOrd = loesOrderMap[key];
+      const loesOrdHtml = loesOrd != null ? `<span class="loes-zahl">${loesOrd}</span>` : '';
+      const letterHtml = showSolution
+        ? `<span class="letter sol">${letter}</span>`
+        : `<span class="letter"></span>`;
+      const inner = `${numHtml}${letterHtml}${loesOrdHtml}`;
+      gridCells += `<div class="cell">${inner}</div>`;
     }
   }
 
@@ -526,7 +1056,7 @@ function generatePuzzleHTML(puzzleData, showSolution = false, omaName = '', issu
   const down   = words.filter(w => w.direction === 'down').sort((a, b) => a.number - b.number);
 
   const modeNote = puzzleType === 'schweden'
-    ? '<p class="mode-note"><strong>Schwedenstil:</strong> Kurze Hinweise stehen in den Startkästchen (→ waagerecht, ↓ senkrecht). Die Liste dient zum Nachschlagen.</p>'
+    ? '<p class="mode-note"><strong>Schwedenstil:</strong> Kompakte Hinweise nur in der Liste unten. Im Gitter wie gewohnt <strong>nur Nummern</strong>.</p>'
     : puzzleType === 'gitter'
       ? '<p class="mode-note"><strong>Gitter ohne Nummern:</strong> Im Gitter sind keine Ziffern – die Zuordnung ergibt sich aus den Kreuzungen und der Liste unten.</p>'
       : '';
@@ -534,6 +1064,30 @@ function generatePuzzleHTML(puzzleData, showSolution = false, omaName = '', issu
   const clueList = arr => arr.map(w =>
     `<div class="clue"><span class="cn">${w.number}</span><span class="ct">${w.clue.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')}</span></div>`
   ).join('');
+
+  let loeswortBundleHtml = '';
+  if (loesW) {
+    const loesUniversalHint =
+      'Die türkisen Zahlmarken unten rechts in den Kästchen (1, 2, 3 …) gehören zum Lösungswort — nicht die schwarzen Rätselnummern oben links. Tragen Sie die Buchstaben in die Kästchen unter dem Gitter ein. Je mehr Begriffe Sie lösen, desto mehr Buchstaben kennen Sie schon.';
+    const slotPx = Math.max(16, Math.min(24, COL_PX + 2));
+    let slotCells = '';
+    for (let i = 0; i < loesW.length; i++) {
+      const inner = showSolution
+        ? `<span class="loeswort-slot-letter">${esc(loesW[i])}</span>`
+        : '';
+      slotCells += `<div class="loeswort-slot">${inner}</div>`;
+    }
+    const reveal = showSolution
+      ? `<p class="loeswort-answer"><strong>Lösung:</strong> ${esc(loesW)}</p>`
+      : '';
+    loeswortBundleHtml = `
+    <div class="loeswort-unter-gitte">
+      <div class="loeswort-leiste-head">Lösungswort</div>
+      <div class="loeswort-slots" style="--loes-slot:${slotPx}px">${slotCells}</div>
+      <p class="loeswort-hint">${loesH ? esc(loesH) : esc(loesUniversalHint)}</p>
+      ${reveal}
+    </div>`;
+  }
 
   const gridW = gridWidth * COL_PX;
 
@@ -652,21 +1206,30 @@ function generatePuzzleHTML(puzzleData, showSolution = false, omaName = '', issu
     justify-content: center;
   }
   .cell.black { background: #111; border-color: #111; }
-  .cell.cell-sweden {
-    flex-direction: column;
-    align-items: stretch;
-    justify-content: flex-end;
-    padding: 2px 3px 3px;
+  .loes-zahl {
+    position: absolute;
+    right: 1px;
+    bottom: 1px;
+    min-width: ${COL_PX < 20 ? 9 : 12}px;
+    height: ${COL_PX < 20 ? 9 : 12}px;
+    padding: 0 2px;
+    box-sizing: border-box;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: ${COL_PX < 20 ? 5 : 6.5}px;
+    font-weight: 900;
+    line-height: 1;
+    letter-spacing: -0.02em;
+    color: #fff;
+    background: #0f766e;
+    border-radius: 2px;
+    box-shadow: 0 0 0 0.5px rgba(15, 118, 110, 0.5);
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+    pointer-events: none;
+    z-index: 4;
   }
-  .sweden-clues { width: 100%; flex: 0 0 auto; }
-  .sw-line {
-    font-size: ${Math.max(5, Math.round(COL_PX * 0.2))}px;
-    line-height: 1.12;
-    text-align: left;
-    color: #222;
-    word-break: break-word;
-  }
-  .sw-line .arr { color: #c8102e; font-weight: 900; margin-right: 2px; }
   .mode-note {
     font-size: 9px;
     color: #444;
@@ -711,6 +1274,64 @@ function generatePuzzleHTML(puzzleData, showSolution = false, omaName = '', issu
   }
   .cn { font-weight: 900; min-width: 14px; text-align: right; color: #c8102e; flex-shrink: 0; }
   .ct { flex: 1; min-width: 0; }
+  .loeswort-unter-gitte {
+    flex: 0 0 auto;
+    width: 100%;
+    max-width: ${gridW}px;
+    margin: 0 auto 12px;
+    padding: 10px 12px;
+    background: #f7f3ec;
+    border: 1px solid #cfc7bb;
+    border-radius: 4px;
+    box-sizing: border-box;
+    break-inside: avoid;
+  }
+  .loeswort-leiste-head {
+    font-size: ${Math.min(clueHeadPx + 1, 10)}px;
+    font-weight: 900;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: #c8102e;
+    border-bottom: 2px solid #c8102e;
+    padding-bottom: 3px;
+    margin-bottom: 8px;
+  }
+  .loeswort-slots {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px 6px;
+    margin-bottom: 8px;
+    align-items: center;
+    justify-content: center;
+  }
+  .loeswort-slot {
+    width: var(--loes-slot, 20px);
+    height: calc(var(--loes-slot, 20px) * 1.15);
+    border: 2px solid #333;
+    border-radius: 2px;
+    background: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+  .loeswort-slot-letter {
+    font-size: calc(var(--loes-slot, 20px) * 0.75);
+    font-weight: 900;
+    color: #c8102e;
+  }
+  .loeswort-hint {
+    font-size: ${clueFontPx}px;
+    line-height: 1.35;
+    color: #333;
+    margin: 0;
+  }
+  .loeswort-answer {
+    font-size: ${clueFontPx}px;
+    margin: 6px 0 0;
+    color: #c8102e;
+    font-weight: 800;
+  }
   /* Footer */
   .footer {
     margin-top: 12px;
@@ -738,6 +1359,7 @@ function generatePuzzleHTML(puzzleData, showSolution = false, omaName = '', issu
     <div class="grid-col">
       <div class="grid-frame"><div class="grid">${gridCells}</div></div>
     </div>
+    ${loeswortBundleHtml}
     <div class="clues-below">
       ${modeNote}
       <div class="clues-section">
