@@ -1,0 +1,839 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Kreuzworträtsel für Oma</title>
+  <style>
+    /* ===== BASE ===== */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Georgia', 'Times New Roman', serif;
+      background: #e8e2d5;
+      min-height: 100vh;
+      padding: 20px;
+    }
+
+    /* ===== PAGE WRAPPER ===== */
+    .page {
+      max-width: 820px;
+      margin: 0 auto;
+      background: #fffdf8;
+      border: 1px solid #bbb;
+      box-shadow: 0 2px 20px rgba(0,0,0,0.18);
+    }
+
+    /* ===== MASTHEAD ===== */
+    .masthead {
+      background: #c8102e;
+      color: white;
+      text-align: center;
+      padding: 10px 20px 8px;
+      border-bottom: 5px solid #8b0a1f;
+    }
+    .masthead-logo {
+      font-size: 11px;
+      letter-spacing: 6px;
+      text-transform: uppercase;
+      opacity: 0.85;
+      font-family: Arial, Helvetica, sans-serif;
+      font-weight: 400;
+    }
+    .masthead h1 {
+      font-size: 38px;
+      font-weight: 900;
+      letter-spacing: 2px;
+      font-family: 'Georgia', serif;
+      line-height: 1;
+      margin: 2px 0 4px;
+    }
+    .masthead-sub {
+      font-size: 12px;
+      letter-spacing: 3px;
+      text-transform: uppercase;
+      font-family: Arial, sans-serif;
+      opacity: 0.9;
+    }
+
+    /* ===== CONTROLS ===== */
+    .controls {
+      display: flex;
+      gap: 12px;
+      padding: 14px 20px;
+      border-bottom: 2px solid #c8102e;
+      background: #faf6ee;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      padding: 9px 22px;
+      font-size: 14px;
+      font-family: Arial, Helvetica, sans-serif;
+      font-weight: 700;
+      letter-spacing: 0.5px;
+      border: 2px solid #333;
+      background: white;
+      cursor: pointer;
+      transition: all 0.15s;
+      text-transform: uppercase;
+      text-decoration: none;
+    }
+    .btn:hover { background: #f0ece3; transform: translateY(-1px); }
+    .btn:active { transform: translateY(0); }
+
+    .btn-red {
+      background: #c8102e;
+      border-color: #8b0a1f;
+      color: white;
+    }
+    .btn-red:hover { background: #a50d25; }
+
+    .btn-pdf {
+      background: #1a4a8a;
+      border-color: #0f2f5e;
+      color: white;
+    }
+    .btn-pdf:hover { background: #143a6e; }
+
+    .btn-solution {
+      background: #2a7a3b;
+      border-color: #1d5429;
+      color: white;
+    }
+    .btn-solution:hover { background: #226030; }
+
+    .btn-solution-print {
+      background: #555;
+      border-color: #333;
+      color: white;
+    }
+    .btn-solution-print:hover { background: #444; }
+
+    .btn-png {
+      background: #5a3e8a;
+      border-color: #3d2a60;
+      color: white;
+    }
+    .btn-png:hover { background: #4a3270; }
+
+    .btn-settings {
+      background: white;
+      border-color: #999;
+      color: #444;
+    }
+    .btn-settings:hover { background: #f0ece3; }
+    .btn-settings.active {
+      background: #444;
+      border-color: #222;
+      color: white;
+    }
+
+    .controls-hint {
+      margin-left: auto;
+      font-family: Arial, sans-serif;
+      font-size: 12px;
+      color: #777;
+      font-style: italic;
+    }
+
+    /* ===== SETTINGS PANEL ===== */
+    .settings-panel {
+      border-bottom: 2px solid #ddd;
+      background: #fdfaf4;
+      overflow: hidden;
+      max-height: 0;
+      transition: max-height 0.35s ease, padding 0.35s ease;
+      padding: 0 24px;
+    }
+    .settings-panel.open {
+      max-height: 500px;
+      padding: 18px 24px 20px;
+    }
+    .settings-inner {
+      display: grid;
+      grid-template-columns: 200px 1fr;
+      gap: 20px 28px;
+      align-items: start;
+    }
+    @media (max-width: 600px) {
+      .settings-inner { grid-template-columns: 1fr; }
+    }
+    .settings-group { display: flex; flex-direction: column; gap: 6px; }
+    .settings-label {
+      font-family: Arial, sans-serif;
+      font-size: 10px;
+      font-weight: 900;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      color: #c8102e;
+    }
+    .settings-input {
+      font-family: Arial, sans-serif;
+      font-size: 15px;
+      padding: 7px 10px;
+      border: 2px solid #ccc;
+      background: white;
+      width: 100%;
+      color: #222;
+      outline: none;
+    }
+    .settings-input:focus { border-color: #c8102e; }
+
+    .settings-textarea {
+      font-family: Arial, sans-serif;
+      font-size: 13px;
+      padding: 7px 10px;
+      border: 2px solid #ccc;
+      background: white;
+      width: 100%;
+      color: #222;
+      outline: none;
+      resize: vertical;
+      min-height: 58px;
+      line-height: 1.4;
+    }
+    .settings-textarea:focus { border-color: #c8102e; }
+    .settings-textarea::placeholder { color: #aaa; }
+
+    /* topic chips */
+    .topic-grid {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 7px;
+    }
+    .topic-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      padding: 5px 11px;
+      font-family: Arial, sans-serif;
+      font-size: 12px;
+      font-weight: 700;
+      border: 2px solid #ccc;
+      background: white;
+      color: #555;
+      cursor: pointer;
+      user-select: none;
+      transition: all 0.12s;
+      border-radius: 2px;
+    }
+    .topic-chip:hover { border-color: #c8102e; color: #c8102e; }
+    .topic-chip.selected {
+      background: #c8102e;
+      border-color: #8b0a1f;
+      color: white;
+    }
+    .topic-chip .chip-icon { font-size: 14px; }
+
+    .settings-full { grid-column: 1 / -1; }
+
+    /* ===== PUZZLE AREA ===== */
+    .puzzle-area {
+      padding: 20px 24px 28px;
+    }
+
+    /* ===== PUZZLE TITLE BAR ===== */
+    .puzzle-title-bar {
+      display: flex;
+      align-items: baseline;
+      gap: 16px;
+      margin-bottom: 18px;
+      padding-bottom: 8px;
+      border-bottom: 3px double #333;
+    }
+    .puzzle-title-bar h2 {
+      font-size: 22px;
+      font-weight: 900;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+    }
+    .puzzle-number-badge {
+      font-family: Arial, sans-serif;
+      font-size: 12px;
+      color: #888;
+      letter-spacing: 2px;
+    }
+    .puzzle-dedication {
+      margin-left: auto;
+      font-size: 13px;
+      font-style: italic;
+      color: #555;
+    }
+
+    /* ===== CROSSWORD LAYOUT ===== */
+    .crossword-layout {
+      display: flex;
+      flex-direction: column;
+      gap: 22px;
+      align-items: flex-start;
+    }
+
+    .grid-column { flex-shrink: 0; }
+
+    /* ===== CLUES (two-column below the grid) ===== */
+    .clues-below {
+      width: 100%;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 0 32px;
+      align-items: start;
+    }
+
+    /* ===== GRID ===== */
+    .crossword-grid {
+      display: inline-grid;
+      border: 3px solid #111;
+      border-right: none;
+      border-bottom: none;
+      background: #111;
+      gap: 0;
+    }
+    .cell {
+      width: 38px;
+      height: 38px;
+      border-right: 1.5px solid #444;
+      border-bottom: 1.5px solid #444;
+      position: relative;
+      background: #fffdf8;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .cell.black {
+      background: #111;
+      border-color: #111;
+    }
+    .cell-num {
+      position: absolute;
+      top: 2px;
+      left: 2px;
+      font-size: 8px;
+      font-weight: 700;
+      line-height: 1;
+      font-family: Arial, Helvetica, sans-serif;
+      color: #222;
+      pointer-events: none;
+      z-index: 2;
+    }
+    .cell-letter {
+      font-size: 18px;
+      font-weight: 900;
+      font-family: Arial, Helvetica, sans-serif;
+      color: #111;
+      letter-spacing: 0;
+      line-height: 1;
+      user-select: none;
+    }
+    .cell-letter.hidden { opacity: 0; }
+
+    /* ===== CLUES ===== */
+    .clues-section {
+      margin-bottom: 20px;
+    }
+    .clues-heading {
+      font-family: Arial, Helvetica, sans-serif;
+      font-size: 11px;
+      font-weight: 900;
+      letter-spacing: 3px;
+      text-transform: uppercase;
+      color: #c8102e;
+      border-bottom: 2px solid #c8102e;
+      padding-bottom: 4px;
+      margin-bottom: 10px;
+    }
+    .clue-item {
+      display: flex;
+      gap: 7px;
+      margin-bottom: 7px;
+      font-family: Arial, Helvetica, sans-serif;
+      font-size: 14px;
+      line-height: 1.35;
+      color: #222;
+    }
+    .clue-num {
+      font-weight: 900;
+      min-width: 18px;
+      text-align: right;
+      flex-shrink: 0;
+      color: #c8102e;
+    }
+    .clue-text { flex: 1; }
+
+    /* ===== ORNAMENT ===== */
+    .ornament {
+      text-align: center;
+      font-size: 18px;
+      color: #c8102e;
+      margin: 10px 0 4px;
+      letter-spacing: 8px;
+    }
+
+    /* ===== FOOTER ===== */
+    .puzzle-footer {
+      padding: 10px 24px;
+      border-top: 2px solid #c8102e;
+      background: #faf6ee;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .puzzle-footer-left {
+      font-family: Arial, sans-serif;
+      font-size: 11px;
+      color: #888;
+    }
+    .puzzle-footer-right {
+      font-family: Georgia, serif;
+      font-size: 13px;
+      font-style: italic;
+      color: #555;
+    }
+
+    /* ===== LOADING / EMPTY STATES ===== */
+    .state-msg {
+      text-align: center;
+      padding: 60px 20px;
+      font-family: Arial, sans-serif;
+    }
+    .state-msg .icon { font-size: 52px; margin-bottom: 12px; }
+    .state-msg h3 { font-size: 20px; color: #333; margin-bottom: 8px; }
+    .state-msg p { color: #777; font-size: 14px; }
+
+    .spinner {
+      width: 48px; height: 48px;
+      border: 5px solid #e0d8c8;
+      border-top-color: #c8102e;
+      border-radius: 50%;
+      animation: spin 0.9s linear infinite;
+      margin: 0 auto 16px;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    .error-box {
+      background: #fff0f0;
+      border: 2px solid #c8102e;
+      padding: 16px 20px;
+      margin: 20px;
+      font-family: Arial, sans-serif;
+      font-size: 14px;
+      color: #8b0a1f;
+    }
+
+    /* ===== SOLUTION MODE ===== */
+    body.show-solution .cell-letter { opacity: 1 !important; }
+    body.show-solution .cell-letter.hidden { opacity: 0.55 !important; color: #c8102e !important; }
+
+    /* ===== PRINT ===== */
+    @media print {
+      body { background: white; padding: 0; }
+
+      .controls { display: none !important; }
+      .puzzle-footer { display: none !important; }
+
+      .page {
+        box-shadow: none;
+        border: none;
+        max-width: 100%;
+      }
+
+      .masthead { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+      .masthead h1 { font-size: 30px; }
+
+      .crossword-layout { gap: 14px; }
+      .clues-below { gap: 0 24px; }
+
+      .cell { width: 32px; height: 32px; }
+      .cell-num { font-size: 7px; }
+      .cell-letter { font-size: 15px; }
+
+      /* Hidden letters stay invisible when printing for Oma (she fills by hand) */
+      .cell-letter.hidden {
+        opacity: 0 !important;
+        visibility: hidden !important;
+      }
+
+      /* Solution print: show letters in a muted color */
+      body.print-solution .cell-letter.hidden {
+        opacity: 1 !important;
+        visibility: visible !important;
+        color: #c8102e !important;
+      }
+
+      .clue-item { font-size: 13px; margin-bottom: 6px; }
+      .clues-heading { font-size: 10px; }
+      .puzzle-area { padding: 12px 16px 16px; }
+      .ornament { display: none; }
+
+      @page { margin: 10mm; size: A4 portrait; }
+    }
+  </style>
+</head>
+<body>
+
+<div class="page">
+
+  <!-- Masthead -->
+  <header class="masthead">
+    <div class="masthead-logo">✦ &nbsp; Omas Rätselheft &nbsp; ✦</div>
+    <h1>Kreuzworträtsel</h1>
+  </header>
+
+  <!-- Controls -->
+  <div class="controls no-print" id="controls">
+    <button class="btn btn-red" id="generateBtn" onclick="generatePuzzle()">
+      <span>✦</span> Neues Rätsel erstellen
+    </button>
+    <button class="btn btn-settings" id="settingsBtn" onclick="toggleSettings()">
+      <span>⚙</span> Einstellungen
+    </button>
+    <button class="btn btn-pdf" id="printBtn" onclick="exportFile('pdf', false)" style="display:none">
+      <span>🖨</span> PDF für Oma
+    </button>
+    <button class="btn btn-solution-print" id="solutionPrintBtn" onclick="exportFile('pdf', true)" style="display:none">
+      <span>📋</span> Lösung als PDF
+    </button>
+    <button class="btn btn-png" id="pngBtn" onclick="exportFile('png', false)" style="display:none">
+      <span>🖼</span> Als Bild (PNG)
+    </button>
+    <button class="btn btn-solution" id="solutionBtn" onclick="toggleSolution()" style="display:none">
+      <span>🔍</span> Lösung anzeigen
+    </button>
+    <span class="controls-hint" id="statusHint">Klicken Sie auf „Neues Rätsel erstellen"</span>
+  </div>
+
+  <!-- Settings Panel -->
+  <div class="settings-panel no-print" id="settingsPanel">
+    <div class="settings-inner">
+
+      <!-- Name -->
+      <div class="settings-group">
+        <label class="settings-label" for="inputName">Name der Oma</label>
+        <input class="settings-input" id="inputName" type="text" value="Maria"
+               placeholder="z.B. Maria" oninput="saveSettings()">
+      </div>
+
+      <!-- Custom context -->
+      <div class="settings-group">
+        <label class="settings-label" for="inputContext">Persönliche Hinweise</label>
+        <textarea class="settings-textarea" id="inputContext"
+          placeholder="z.B. Lieblingskomponist ist Mozart, kommt aus Sudetenland, mag Rosen …"
+          oninput="saveSettings()"></textarea>
+      </div>
+
+      <!-- Topics — full width row -->
+      <div class="settings-group settings-full">
+        <span class="settings-label">Themen wählen</span>
+        <div class="topic-grid" id="topicGrid">
+          <!-- chips rendered by JS -->
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- Puzzle Area -->
+  <div class="puzzle-area" id="puzzleArea">
+    <div class="state-msg" id="welcomeMsg">
+      <div class="icon">🌸</div>
+      <h3>Herzlich willkommen!</h3>
+      <p>Klicken Sie oben auf <strong>„Neues Rätsel erstellen"</strong>,<br>um ein frisches Rätsel für Oma zu erzeugen.</p>
+    </div>
+  </div>
+
+  <!-- Footer -->
+  <footer class="puzzle-footer" id="puzzleFooter" style="display:none">
+    <span class="puzzle-footer-left" id="footerLeft">Erstellt mit ❤ für Oma Maria</span>
+    <span class="puzzle-footer-right">Viel Spaß beim Rätseln!</span>
+  </footer>
+
+</div>
+
+<script>
+  // ---- Topic definitions ----
+  const TOPICS = [
+    { id: 'musik',       label: 'Klassische Musik',    icon: '🎵', default: true  },
+    { id: 'bayern',      label: 'Bayern & Heimat',     icon: '🏔',  default: true  },
+    { id: 'kochen',      label: 'Kochen & Backen',     icon: '🍰', default: true  },
+    { id: 'natur',       label: 'Natur & Garten',      icon: '🌿', default: true  },
+    { id: 'blumen',      label: 'Blumen & Pflanzen',   icon: '🌸', default: false },
+    { id: 'religion',    label: 'Religion & Kirche',   icon: '⛪', default: false },
+    { id: 'familie',     label: 'Familie & Alltag',    icon: '👨‍👩‍👧', default: false },
+    { id: 'tiere',       label: 'Tiere',               icon: '🐦', default: false },
+    { id: 'geschichte',  label: 'Heimat & Geschichte', icon: '🏡', default: false },
+    { id: 'gesundheit',  label: 'Gesundheit & Essen',  icon: '🥗', default: false },
+  ];
+
+  // ---- Settings persistence ----
+  function getSettings() {
+    try {
+      return JSON.parse(localStorage.getItem('ratsel-settings') || '{}');
+    } catch { return {}; }
+  }
+
+  function saveSettings() {
+    const name    = document.getElementById('inputName').value.trim();
+    const context = document.getElementById('inputContext').value.trim();
+    const topics  = TOPICS
+      .filter(t => document.getElementById('chip-' + t.id)?.classList.contains('selected'))
+      .map(t => t.label);
+    localStorage.setItem('ratsel-settings', JSON.stringify({ name, topics, customContext: context }));
+    // live-update footer
+    document.getElementById('footerLeft').textContent = `Erstellt mit ❤ für Oma ${name || 'Maria'}`;
+  }
+
+  function loadSettings() {
+    const s = getSettings();
+    document.getElementById('inputName').value    = s.name    || 'Maria';
+    document.getElementById('inputContext').value = s.customContext || '';
+
+    const selectedTopics = s.topics && s.topics.length ? new Set(s.topics) : null;
+    TOPICS.forEach(t => {
+      const chip = document.getElementById('chip-' + t.id);
+      if (!chip) return;
+      const shouldSelect = selectedTopics ? selectedTopics.has(t.label) : t.default;
+      chip.classList.toggle('selected', shouldSelect);
+    });
+    document.getElementById('footerLeft').textContent =
+      `Erstellt mit ❤ für Oma ${s.name || 'Maria'}`;
+  }
+
+  // ---- Render topic chips ----
+  function renderTopicChips() {
+    const grid = document.getElementById('topicGrid');
+    grid.innerHTML = TOPICS.map(t => `
+      <div class="topic-chip${t.default ? ' selected' : ''}" id="chip-${t.id}"
+           onclick="toggleChip(this)">
+        <span class="chip-icon">${t.icon}</span>${t.label}
+      </div>`).join('');
+  }
+
+  function toggleChip(el) {
+    el.classList.toggle('selected');
+    saveSettings();
+  }
+
+  function toggleSettings() {
+    const panel = document.getElementById('settingsPanel');
+    const btn   = document.getElementById('settingsBtn');
+    const open  = panel.classList.toggle('open');
+    btn.classList.toggle('active', open);
+  }
+
+  // ---- Startup ----
+  renderTopicChips();
+  loadSettings();
+
+  // ---- State ----
+  let currentPuzzle = null;
+  let solutionVisible = false;
+  let puzzleCount = 0;
+
+  async function generatePuzzle() {
+    const btn = document.getElementById('generateBtn');
+    const area = document.getElementById('puzzleArea');
+    const hint = document.getElementById('statusHint');
+    const footer = document.getElementById('puzzleFooter');
+    const solBtn = document.getElementById('solutionBtn');
+
+    btn.disabled = true;
+    solBtn.style.display = 'none';
+    document.getElementById('printBtn').style.display = 'none';
+    document.getElementById('solutionPrintBtn').style.display = 'none';
+    document.getElementById('pngBtn').style.display = 'none';
+    footer.style.display = 'none';
+    solutionVisible = false;
+    document.body.classList.remove('show-solution');
+    solBtn.textContent = '🔍 Lösung anzeigen';
+
+    area.innerHTML = `
+      <div class="state-msg">
+        <div class="spinner"></div>
+        <h3>Rätsel wird erstellt …</h3>
+        <p>Claude denkt sich neue Fragen aus – einen Moment bitte.</p>
+      </div>`;
+    hint.textContent = 'Claude arbeitet …';
+
+    try {
+      const res = await fetch('/api/generate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ settings: getSettings() }),
+      });
+
+      const data = await res.json();
+
+      if (!res.ok || data.error) {
+        throw new Error(data.error || 'Unbekannter Fehler');
+      }
+
+      currentPuzzle = data;
+      puzzleCount++;
+      renderPuzzle(data);
+      footer.style.display = 'flex';
+      solBtn.style.display = 'inline-flex';
+      document.getElementById('printBtn').style.display = 'inline-flex';
+      document.getElementById('solutionPrintBtn').style.display = 'inline-flex';
+      document.getElementById('pngBtn').style.display = 'inline-flex';
+      hint.textContent = `Rätsel Nr. ${puzzleCount} bereit · ${data.words.length} Wörter`;
+    } catch (err) {
+      area.innerHTML = `
+        <div class="error-box">
+          <strong>Fehler beim Erstellen des Rätsels:</strong><br>${err.message}
+        </div>
+        <div class="state-msg">
+          <p>Bitte versuchen Sie es erneut.</p>
+        </div>`;
+      hint.textContent = 'Fehler – bitte erneut versuchen';
+    } finally {
+      btn.disabled = false;
+    }
+  }
+
+  function renderPuzzle(data) {
+    const { title, gridWidth, gridHeight, words } = data;
+
+    // Build letter grid
+    const grid = Array.from({ length: gridHeight }, () => Array(gridWidth).fill(null));
+    for (const w of words) {
+      const letters = w.word.toUpperCase();
+      for (let i = 0; i < letters.length; i++) {
+        const r = w.direction === 'down' ? w.row + i : w.row;
+        const c = w.direction === 'across' ? w.col + i : w.col;
+        if (r >= 0 && r < gridHeight && c >= 0 && c < gridWidth) {
+          grid[r][c] = letters[i];
+        }
+      }
+    }
+
+    // Build number map: "r,c" → number
+    const numMap = {};
+    for (const w of words) {
+      const key = `${w.row},${w.col}`;
+      if (w.number !== undefined) numMap[key] = w.number;
+    }
+
+    // ---- Grid HTML ----
+    let gridHtml = `<div class="crossword-grid" style="grid-template-columns: repeat(${gridWidth}, 38px)">`;
+    for (let r = 0; r < gridHeight; r++) {
+      for (let c = 0; c < gridWidth; c++) {
+        const letter = grid[r][c];
+        const key = `${r},${c}`;
+        if (letter === null) {
+          gridHtml += `<div class="cell black"></div>`;
+        } else {
+          const num = numMap[key];
+          const numHtml = num ? `<span class="cell-num">${num}</span>` : '';
+          gridHtml += `<div class="cell">
+            ${numHtml}
+            <span class="cell-letter hidden">${letter}</span>
+          </div>`;
+        }
+      }
+    }
+    gridHtml += `</div>`;
+
+    // ---- Clues HTML ----
+    const across = words.filter(w => w.direction === 'across').sort((a, b) => a.number - b.number);
+    const down = words.filter(w => w.direction === 'down').sort((a, b) => a.number - b.number);
+
+    const clueList = (arr) => arr.map(w =>
+      `<div class="clue-item">
+        <span class="clue-num">${w.number}</span>
+        <span class="clue-text">${escHtml(w.clue)}</span>
+      </div>`
+    ).join('');
+
+    const cluesHtml = `
+      <div class="clues-below">
+        <div class="clues-section">
+          <div class="clues-heading">Waagerecht →</div>
+          ${clueList(across)}
+        </div>
+        <div class="clues-section">
+          <div class="clues-heading">Senkrecht ↓</div>
+          ${clueList(down)}
+        </div>
+      </div>`;
+
+    // ---- Assemble ----
+    document.getElementById('puzzleArea').innerHTML = `
+      <div class="puzzle-title-bar">
+        <h2>${escHtml(title)}</h2>
+        <span class="puzzle-number-badge">Nr.&nbsp;${puzzleCount}</span>
+        <span class="puzzle-dedication">Für Oma ${escHtml(getSettings().name || 'Maria')}</span>
+      </div>
+      <div class="crossword-layout">
+        <div class="grid-column">${gridHtml}</div>
+        ${cluesHtml}
+      </div>
+
+      <div class="ornament">✦ ✦ ✦</div>`;
+  }
+
+  function toggleSolution() {
+    solutionVisible = !solutionVisible;
+    const btn = document.getElementById('solutionBtn');
+    if (solutionVisible) {
+      document.body.classList.add('show-solution');
+      btn.textContent = '🙈 Lösung verbergen';
+    } else {
+      document.body.classList.remove('show-solution');
+      btn.textContent = '🔍 Lösung anzeigen';
+    }
+  }
+
+  async function exportFile(format, solution) {
+    if (!currentPuzzle) return;
+
+    const btnId = format === 'png' ? 'pngBtn' : (solution ? 'solutionPrintBtn' : 'printBtn');
+    const btn = document.getElementById(btnId);
+    const originalText = btn.innerHTML;
+    btn.disabled = true;
+    btn.innerHTML = '<span>⏳</span> Wird erstellt…';
+
+    try {
+      const omaName = getSettings().name || 'Maria';
+      const res = await fetch(`/api/${format}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ puzzleData: currentPuzzle, solution, omaName }),
+      });
+
+      if (!res.ok) {
+        const err = await res.json();
+        throw new Error(err.error || 'Unbekannter Fehler');
+      }
+
+      const blob = await res.blob();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = solution
+        ? `kreuzwortratsel-loesung.${format}`
+        : `kreuzwortratsel-oma.${format}`;
+      a.click();
+      URL.revokeObjectURL(url);
+    } catch (err) {
+      alert('Fehler beim Erstellen: ' + err.message);
+    } finally {
+      btn.disabled = false;
+      btn.innerHTML = originalText;
+    }
+  }
+
+  function escHtml(str) {
+    return String(str)
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;');
+  }
+</script>
+
+</body>
+</html>
