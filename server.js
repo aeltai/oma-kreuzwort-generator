@@ -16,39 +16,178 @@ const client = new Anthropic({
 // Anthropic: only ask for words + clues, no grid layout
 // ---------------------------------------------------------------------------
 
-const SYSTEM_PROMPT = `Du bist ein freundlicher Redakteur für deutschsprachige Kreuzworträtsel.
-Du gibst AUSSCHLIESSLICH valides JSON zurück – kein weiterer Text, keine Markdown-Blöcke.`;
+const SYSTEM_PROMPT = `Du bist ein einfühlsamer Redakteur für deutschsprachige Kreuzworträtsel für Seniorinnen und Senioren.
+Du gibst AUSSCHLIESSLICH valides JSON zurück – kein weiterer Text, keine Markdown-Codeblöcke.
+Wenn persönliche Familien- oder Lebensinformationen geliefert werden, sind sie verbindlich und dürfen nicht ignoriert werden.
+Wenn ein Gesundheits- oder Unterstützungskontext (z. B. Demenz, Depression) angegeben ist, ist dieser verbindlich – respektvoll, nicht stigmatisierend formulieren.
+Die gewählte Schwierigkeit (sehr leicht / leicht / mittel) ist verbindlich für Wort- und Hinweiswahl.`;
 
-// Build a prompt from user-supplied settings
+function healthProfileBlock(code) {
+  const c = String(code || 'none');
+  const blocks = {
+    none: '',
+    demenz: `
+=== UNTERSTÜTZUNGSKONTEXT: DEMENZ / LEICHTE KOGNITIVE BEEINTRÄCHTIGUNG (verbindlich) ===
+Die Rätselperson lebt mit Demenz oder vergleichbar eingeschränkter Merkfähigkeit. Wählen Sie durchweg **sehr vertraute, konkrete** Alltagswörter (Gegenstände, Natur, Essen, einfache Berufe). Hinweise: **kurz, eindeutig**, ein Bild im Kopf (z. B. „Rot und sauer, wächst am Busch“ statt literarischer Umschreibung). Keine Trickfragen, keine Doppelbedeutungen, kein Zeitdruck im Text. Positiver, würdevoller Ton.
+`,
+    depression: `
+=== KONTEXT: STIMMUNG, ANTREIB, KONZENTRATION (verbindlich) ===
+Energie und Konzentration können geschwächt sein. **Kurze, freundliche** Hinweise ohne Eile oder Leistungsdruck. Bekannte Wörter; vermeiden Sie karge oder tadelnde Formulierungen. Kleine Freuden und Gewohnheiten (Natur, Tee, Musik) sind willkommen.
+`,
+    schlaganfall: `
+=== KONTEXT: Z. B. NACH SCHLAGANFALL — SPRACHE / LESEN (verbindlich) ===
+Bevorzugen Sie **kurze, häufige** Wörter (4–6 Buchstaben wo möglich). Einfache Satzstruktur in den Hinweisen. Keine verschachtelten Sätze. Ein klares Lesebild pro Hinweis.
+`,
+    parkinson: `
+=== KONTEXT: MOTORIK / FEINMOTORIK (verbindlich) ===
+Begriffe sollen **leicht zu erkennen** sein; Hinweise klar gegliedert (gern mit Komma kurz teilen, nicht ein endloser Satz). Keine winzig-komplexen Rätselhinweise — Klarheit vor Kürze.
+`,
+    sehschwaeche: `
+=== KONTEXT: SEHSCHWÄCHE (verbindlich) ===
+Hinweistexte: **sachlich und klar**, ohne auf kleine Unterscheidungen im Schriftbild anzuspielen (keine „erkennen Sie den Unterschied“-Aufgaben). Gut unterscheidbare Alltagsbegriffe.
+`,
+    angst: `
+=== KONTEXT: ÄNGSTLICHKEIT / UNRUHE (verbindlich) ===
+Ruhige, **vorhersehbare** Formulierungen. Keine Schreck-, Druck- oder Konflikt-Themen in Hinweisen. Vertraute, behagliche Bilder.
+`,
+  };
+  return blocks[c] || '';
+}
+
+function difficultyBlock(code) {
+  const c = String(code || 'leicht');
+  const blocks = {
+    sehr_leicht: `
+SCHWIERIGKEIT: **SEHR LEICHT** (verbindlich):
+- Vorzugsweise Lösungswörter mit **4–6 Buchstaben**, alltäglich und konkret.
+- Hinweise: **ein kurzer Satz**, direkt auf den Begriff zielend, ohne Umweg.
+- Keine seltenen Fremdwörter, keine Kulturhistorie-Spezialisten-Namen.
+`,
+    leicht: `
+SCHWIERIGKEIT: **LEICHT** (verbindlich):
+- Lösungswörter **4–8 Buchstaben**, überwiegend alltagsnah.
+- Hinweise: klar und freundlich; leichte Umschreibung erlaubt, aber immer **lösbar ohne Rätseltricks**.
+`,
+    mittel: `
+SCHWIERIGKEIT: **MITTEL** (für noch fittere Seniorinnen — verbindlich):
+- Lösungswörter bis **9 Buchstaben** möglich; gelegentlich etwas **weniger häufig**, aber nie hochakademisch.
+- Hinweise dürfen **einen kleinen Denkschritt** verlangen, müssen aber fair und ohne List bleiben. Weiterhin respektvoll und positiv.
+`,
+  };
+  return blocks[c] || blocks.leicht;
+}
+
+const HEALTH_PROFILE_KEYS = new Set([
+  'none', 'demenz', 'depression', 'schlaganfall', 'parkinson', 'sehschwaeche', 'angst',
+]);
+
+const DIFFICULTY_KEYS = new Set(['sehr_leicht', 'leicht', 'mittel']);
+
+function normalizeHealthProfile(code) {
+  const c = String(code || 'none');
+  return HEALTH_PROFILE_KEYS.has(c) ? c : 'none';
+}
+
+function normalizeDifficulty(code) {
+  const c = String(code || 'leicht');
+  return DIFFICULTY_KEYS.has(c) ? c : 'leicht';
+}
+
+function puzzleTypePromptExtra(puzzleType) {
+  if (puzzleType === 'schweden') {
+    return `
+RÄTSELART „Schwedenstil“ (kompakte Hinweise – erscheinen später auch in den Startkästchen):
+- Jeder Hinweis („clue“) maximal etwa 50 Zeichen, lieber kürzer; trotzdem für Seniorinnen verständlich.
+`;
+  }
+  if (puzzleType === 'gitter') {
+    return `
+RÄTSELART „Gitter ohne Nummern im Gitter“:
+- Nur die Hinweisliste enthält die Nummern; sie dürfen etwas ausführlicher und liebevoller sein als beim Schwedenstil.
+`;
+  }
+  return `
+RÄTSELART „Standard-Kreuzworträtsel“:
+- Hinweise als kurze, klare Sätze; bei persönlichen Themen gern etwas ausführlicher.
+`;
+}
+
+// Build prompt from user settings (general by default; personal story overrides when enabled)
 function buildUserPrompt(settings = {}) {
-  const name          = (settings.name        || 'Maria').trim();
-  const topics        = Array.isArray(settings.topics) && settings.topics.length
-                          ? settings.topics
-                          : ['Klassische Musik', 'Bayern & Heimat', 'Kochen & Backen', 'Natur & Blumen'];
+  const healthProfile = normalizeHealthProfile(settings.healthProfile);
+  const difficulty    = normalizeDifficulty(settings.difficulty);
+  const puzzleType = ['standard', 'schweden', 'gitter'].includes(settings.puzzleType)
+    ? settings.puzzleType
+    : 'standard';
+  const name = (settings.name || '').trim();
+  const nameLine = name
+    ? `Optionaler Vorname für warme, sparsame Ansprache in einzelnen Hinweisen: ${name}`
+    : 'Kein Vorname angegeben – formulieren Sie die Hinweise allgemein herzlich (ohne fiktiven Namen).';
+
+  const topics = Array.isArray(settings.topics) && settings.topics.length
+    ? settings.topics
+    : ['Natur & Jahreszeiten', 'Alltag & Zuhause', 'Einfache Freizeit', 'Essen & Trinken'];
+
   const customContext = (settings.customContext || '').trim();
+  const familyStory   = (settings.familyStory || '').trim();
+  const useFamily     = settings.useFamilyStory !== false && familyStory.length > 0;
 
-  const topicBullets = topics.map(t => `• ${t}`).join('\n');
-  const contextLine  = customContext ? `\nPersönlicher Hinweis: ${customContext}` : '';
+  const topicBlock = topics.map(t => `• ${t}`).join('\n');
 
-  return `Erstelle eine Liste von 24 deutschen Wörtern mit Rätselfragen für ein Kreuzworträtsel.
-Das Rätsel ist für Oma ${name}, die leichte Demenz hat – alles soll sehr leicht, vertraut und positiv sein.${contextLine}
+  let personalBlock = '';
+  if (useFamily) {
+    personalBlock = `
+=== PERSÖNLICHE FAMILIEN- UND LEBENSINFORMATIONEN (verbindlich) ===
+Der Ersteller hat folgende Angaben gemacht. Sie MÜSSEN diese ernst nehmen.
 
-Themen (bitte gut mischen):
-${topicBullets}
+Leiten Sie Begriffe u. a. ab aus: Vornamen, Orten, Berufen, Beziehungen (Ehepartner, Kinder, Enkel), Schulen, Ländern oder Reisen – genau wie beschrieben, ohne Personen wegzulassen. Wenn ein Name kürzer als 4 Buchstaben ist, verwenden Sie stattdessen einen klaren verwandten Begriff aus dem Kontext (z. B. Stadt, Beruf, ‚LEHRER‘, ‚FAMILIE‘) oder einen passenden längeren Namen aus dem Text.
 
-Regeln:
-- Wörter: 4–9 Buchstaben
-- NUR Großbuchstaben, KEINE Umlaute (ä→AE, ö→OE, ü→UE, ß→SS)
-- Nur sehr bekannte, einfache Begriffe
-- Rätselfragen: kurz, freundlich, auf Deutsch
-- Bevorzuge Wörter mit häufigen Buchstaben (E, N, R, S, T, A, I) für gute Vernetzung im Gitter
+Hinweise: liebevoll, konkret, leicht verständlich für die gewählte Zielgruppe – keine Rätsel um Trauer, aber Ehepartner und Kinder respektvoll nennen dürfen (z. B. „Er war Lehrer für Englisch“, „Tochter unterrichtete Deutsch“).
 
-Antwortformat (NUR dieses JSON, alle 24 Wörter):
+${familyStory}
+${customContext ? `\nZusätzliche Wünsche vom Ersteller: ${customContext}\n` : ''}
+=== Ende der persönlichen Informationen ===
+
+MISCHUNG MIT ALLGEMEINEN BEGRIFFEN (verbindliche Aufteilung der 24 Wörter):
+- Mindestens 10 Lösungswörter inkl. Hinweise sollen sich eindeutig auf die persönlichen Informationen beziehen (Familie, Orte, Berufe, Beziehungen).
+- Mindestens 8 Lösungswörter sollen klassische, leichte Allgemeinbegriffe sein, passend zu diesen Themen (nicht aus dem Familientext „abfischbar“ – echte allgemeine Begriffe wie Blume, Bach, Brot, Walzer, Sonne je nach Thema):
+${topicBlock}
+- Die restlichen bis 6 Einträge frei wählen (persönlich oder allgemein), damit das Gitter gut vernetzbar bleibt.
+Ziel: ein ausgewogenes Rätsel – nicht nur Familie, sondern auch vertraute, „normale“ Kreuzwort-Begriffe aus den gewählten Themen.
+`;
+  }
+
+  const generalBlock = useFamily
+    ? ''
+    : `
+Allgemeine Themenschwerpunkte (gut mischen, einfache Begriffe):
+${topicBlock}
+${customContext ? `\nZusätzliche Wünsche vom Ersteller: ${customContext}\n` : ''}`;
+
+  const audienceLine = healthProfile === 'none'
+    ? 'Zielgruppe (ohne speziellen Gesundheitsfokus): ältere Menschen; oft mit leichter kognitiver Einschränkung (z. B. Demenz). Wortwahl und Hinweise müssen zur gewählten **Schwierigkeit** passen.'
+    : 'Zielgruppe und sprachliche Leitplanken: im **Gesundheits-/Unterstützungskontext** oben beschrieben (verbindlich). Wortlänge und Alltagsnähe **zusätzlich** strikt gemäß **Schwierigkeit**.';
+
+  return `Erstelle genau 24 deutsche Wörter mit jeweils einem kurzen Hinweis (Rätselfrage) für ein Kreuzworträtsel.
+
+${difficultyBlock(difficulty)}${healthProfileBlock(healthProfile)}
+${audienceLine} Ton: warm, würdevoll, positiv, sehr klar. Keine ironischen Texte, keine unnötig schweren Begriffe.
+
+${nameLine}
+${name ? `Als JSON-"title" z. B. ein herzlicher Titel in Großbuchstaben, z. B. „${name.toUpperCase()}S FAMILIENRÄTSEL“ oder „EIN RÄTSEL FÜR ${name.toUpperCase()}“ — oder eine eigene passende Kurzform.` : 'Als JSON-"title" einen kurzen, herzlichen Titel (gern in Großbuchstaben, Magazinstil).'}
+${personalBlock}${generalBlock}
+${puzzleTypePromptExtra(puzzleType)}
+
+Technische Regeln:
+- Pro Eintrag: "word" (4–9 Buchstaben, ideal für Kreuzungen), nur A–Z; Umlaute als AE, OE, UE; SS statt ß
+- "clue": ein kurzer, freundlicher deutscher Satz
+- Bevorzugen Sie Buchstaben E, N, R, S, T, A, I, O für gutes Vernetzen
+
+Antwortformat (NUR dieses JSON, exakt 24 Objekte in "words"):
 {
-  "title": "Passender kurzer Rätseltitel",
+  "title": "Kurzer herzlicher Titel",
   "words": [
-    { "word": "MOZART", "clue": "Großer Komponist aus Salzburg" },
-    { "word": "TULPE",  "clue": "Bunte Frühlingsblume" }
+    { "word": "BEISPIEL", "clue": "Kurzer Hinweis" }
   ]
 }`;
 }
@@ -229,9 +368,12 @@ function numberWords(words) {
 app.post('/api/generate', async (req, res) => {
   try {
     const settings = req.body.settings || {};
-    const userPrompt = buildUserPrompt(settings);
+    const puzzleType = ['standard', 'schweden', 'gitter'].includes(settings.puzzleType)
+      ? settings.puzzleType
+      : 'standard';
+    const userPrompt = buildUserPrompt({ ...settings, puzzleType });
     let wordObjects = null;
-    let title = 'Bayerisches Rätsel';
+    let title = 'Kreuzworträtsel';
 
     for (let attempt = 0; attempt < 2; attempt++) {
       const msg = await client.messages.create({
@@ -277,7 +419,7 @@ app.post('/api/generate', async (req, res) => {
 
     numberWords(result.words);
 
-    res.json({ title, ...result });
+    res.json({ title, puzzleType, ...result });
   } catch (err) {
     console.error('Fehler:', err);
     res.status(500).json({ error: err.message });
@@ -288,9 +430,40 @@ app.post('/api/generate', async (req, res) => {
 // Standalone HTML renderer for Puppeteer
 // ---------------------------------------------------------------------------
 
-function generatePuzzleHTML(puzzleData, showSolution = false, omaName = 'Maria') {
+function clueShort(text, maxLen) {
+  const t = String(text || '').trim();
+  if (t.length <= maxLen) return t;
+  return `${t.slice(0, Math.max(1, maxLen - 1)).trim()}…`;
+}
+
+function swedenCellInner(wordsHere, esc, showSolution, letter) {
+  const wa = wordsHere.find(w => w.direction === 'across');
+  const wd = wordsHere.find(w => w.direction === 'down');
+  let inner = '';
+  if (wa) inner += `<div class="sw-line"><span class="arr">→</span>${esc(clueShort(wa.clue, 54))}</div>`;
+  if (wd) inner += `<div class="sw-line"><span class="arr">↓</span>${esc(clueShort(wd.clue, 54))}</div>`;
+  const letterHtml = showSolution
+    ? `<span class="letter sol">${letter}</span>`
+    : `<span class="letter"></span>`;
+  return `<div class="sweden-clues">${inner}</div>${letterHtml}`;
+}
+
+function generatePuzzleHTML(puzzleData, showSolution = false, omaName = '', issueNo = null) {
   const { title, gridWidth, gridHeight, words } = puzzleData;
   const nWords = words.length;
+
+  const puzzleType = ['standard', 'schweden', 'gitter'].includes(puzzleData.puzzleType)
+    ? puzzleData.puzzleType
+    : 'standard';
+
+  const esc = s => String(s)
+    .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+  const safeTitle = esc(title || 'Kreuzworträtsel');
+  const safeName = esc((omaName || '').trim());
+  const dedicLine = safeName ? `Für ${safeName}` : 'Mit lieben Grüßen';
+  const footerPlay = showSolution
+    ? '✦ Lösungsblatt ✦'
+    : (safeName ? `Viel Spaß beim Rätseln, ${safeName}! ♥` : 'Viel Spaß beim Rätseln! ♥');
 
   // Build letter grid
   const grid = Array.from({ length: gridHeight }, () => Array(gridWidth).fill(null));
@@ -310,7 +483,8 @@ function generatePuzzleHTML(puzzleData, showSolution = false, omaName = 'Maria')
 
   // ~usable content width inside A4 (px @ 96dpi) — shrink cell size so wide grids fit
   const usableWpx = 540;
-  const CELL = Math.max(13, Math.min(34, Math.floor(usableWpx / Math.max(1, gridWidth))));
+  const COL_PX = Math.max(13, Math.min(34, Math.floor(usableWpx / Math.max(1, gridWidth))));
+  const ROW_PX = puzzleType === 'schweden' ? Math.min(COL_PX + 22, 58) : COL_PX;
 
   // Tighter clue typography when many words (helps single-page PDF)
   const clueFontPx = nWords > 22 ? 9.5 : nWords > 16 ? 10.5 : 12;
@@ -324,13 +498,26 @@ function generatePuzzleHTML(puzzleData, showSolution = false, omaName = 'Maria')
       const letter = grid[r][c];
       if (letter === null) {
         gridCells += `<div class="cell black"></div>`;
+        continue;
+      }
+      const key = `${r},${c}`;
+      const num = numMap[key];
+      const wordsHere = words.filter(w => w.row === r && w.col === c);
+      const isStart = wordsHere.length > 0;
+      let cellClass = 'cell';
+      if (puzzleType === 'schweden' && isStart) cellClass += ' cell-sweden';
+
+      let inner;
+      if (puzzleType === 'schweden' && isStart) {
+        inner = swedenCellInner(wordsHere, esc, showSolution, letter);
       } else {
-        const num = numMap[`${r},${c}`];
+        const numHtml = (puzzleType !== 'gitter' && num) ? `<span class="num">${num}</span>` : '';
         const letterHtml = showSolution
           ? `<span class="letter sol">${letter}</span>`
           : `<span class="letter"></span>`;
-        gridCells += `<div class="cell">${num ? `<span class="num">${num}</span>` : ''}${letterHtml}</div>`;
+        inner = `${numHtml}${letterHtml}`;
       }
+      gridCells += `<div class="${cellClass}">${inner}</div>`;
     }
   }
 
@@ -338,11 +525,17 @@ function generatePuzzleHTML(puzzleData, showSolution = false, omaName = 'Maria')
   const across = words.filter(w => w.direction === 'across').sort((a, b) => a.number - b.number);
   const down   = words.filter(w => w.direction === 'down').sort((a, b) => a.number - b.number);
 
+  const modeNote = puzzleType === 'schweden'
+    ? '<p class="mode-note"><strong>Schwedenstil:</strong> Kurze Hinweise stehen in den Startkästchen (→ waagerecht, ↓ senkrecht). Die Liste dient zum Nachschlagen.</p>'
+    : puzzleType === 'gitter'
+      ? '<p class="mode-note"><strong>Gitter ohne Nummern:</strong> Im Gitter sind keine Ziffern – die Zuordnung ergibt sich aus den Kreuzungen und der Liste unten.</p>'
+      : '';
+
   const clueList = arr => arr.map(w =>
     `<div class="clue"><span class="cn">${w.number}</span><span class="ct">${w.clue.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')}</span></div>`
   ).join('');
 
-  const gridW = gridWidth * CELL;
+  const gridW = gridWidth * COL_PX;
 
   return `<!DOCTYPE html>
 <html lang="de">
@@ -365,50 +558,45 @@ function generatePuzzleHTML(puzzleData, showSolution = false, omaName = 'Maria')
     padding: 10mm 12mm 10mm;
     box-sizing: border-box;
   }
-  /* Masthead */
-  .masthead {
-    background: #c8102e;
-    color: white;
-    text-align: center;
-    padding: 8px 14px 6px;
-    margin-bottom: 10px;
+  .top-rule {
+    border-top: 1px solid #222;
+    margin-bottom: 8px;
   }
-  .masthead-eyebrow {
-    font-size: 9px;
-    letter-spacing: 4px;
-    text-transform: uppercase;
-    opacity: 0.85;
-    margin-bottom: 2px;
-  }
-  .masthead h1 {
-    font-family: Georgia, 'Times New Roman', serif;
-    font-size: 28px;
-    font-weight: 900;
-    letter-spacing: 2px;
-    line-height: 1;
-    margin-bottom: 2px;
-  }
-  /* Title bar */
+  /* Magazin-Titelleiste (wie gedrucktes Rätselheft) */
   .title-bar {
     display: flex;
     align-items: baseline;
-    gap: 12px;
-    border-bottom: 3px double #333;
-    padding-bottom: 5px;
-    margin-bottom: 10px;
+    flex-wrap: wrap;
+    gap: 6px 14px;
+    padding-bottom: 8px;
+    margin-bottom: 12px;
+    border-bottom: 1px solid #333;
+    box-shadow: 0 1px 0 #333;
   }
   .title-bar h2 {
-    font-family: Georgia, serif;
-    font-size: 16px;
+    font-family: Georgia, 'Times New Roman', serif;
+    font-size: 17px;
     font-weight: 900;
     text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: #111;
+    flex: 1 1 auto;
+    min-width: 0;
+  }
+  .issue-no {
+    font-family: Arial, Helvetica, sans-serif;
+    font-size: 10px;
+    color: #888;
     letter-spacing: 1px;
+    flex-shrink: 0;
   }
   .title-dedication {
     margin-left: auto;
+    font-family: Georgia, serif;
     font-size: 11px;
     font-style: italic;
-    color: #555;
+    color: #444;
+    flex-shrink: 0;
   }
   /* Layout: grid ON TOP, clues ONLY below (full width, never beside the grid) */
   .layout {
@@ -425,6 +613,12 @@ function generatePuzzleHTML(puzzleData, showSolution = false, omaName = 'Maria')
     justify-content: center;
     align-items: flex-start;
   }
+  .grid-frame {
+    background: #111;
+    padding: 4px;
+    display: inline-block;
+    line-height: 0;
+  }
   .clues-below {
     flex: 0 0 auto;
     width: 100%;
@@ -437,7 +631,8 @@ function generatePuzzleHTML(puzzleData, showSolution = false, omaName = 'Maria')
   /* Grid */
   .grid {
     display: grid;
-    grid-template-columns: repeat(${gridWidth}, ${CELL}px);
+    grid-template-columns: repeat(${gridWidth}, ${COL_PX}px);
+    grid-template-rows: repeat(${gridHeight}, ${ROW_PX}px);
     border: 2px solid #111;
     border-right: none;
     border-bottom: none;
@@ -446,8 +641,8 @@ function generatePuzzleHTML(puzzleData, showSolution = false, omaName = 'Maria')
     flex-shrink: 0;
   }
   .cell {
-    width: ${CELL}px;
-    height: ${CELL}px;
+    width: ${COL_PX}px;
+    height: ${ROW_PX}px;
     border-right: 1.5px solid #555;
     border-bottom: 1.5px solid #555;
     position: relative;
@@ -457,16 +652,38 @@ function generatePuzzleHTML(puzzleData, showSolution = false, omaName = 'Maria')
     justify-content: center;
   }
   .cell.black { background: #111; border-color: #111; }
+  .cell.cell-sweden {
+    flex-direction: column;
+    align-items: stretch;
+    justify-content: flex-end;
+    padding: 2px 3px 3px;
+  }
+  .sweden-clues { width: 100%; flex: 0 0 auto; }
+  .sw-line {
+    font-size: ${Math.max(5, Math.round(COL_PX * 0.2))}px;
+    line-height: 1.12;
+    text-align: left;
+    color: #222;
+    word-break: break-word;
+  }
+  .sw-line .arr { color: #c8102e; font-weight: 900; margin-right: 2px; }
+  .mode-note {
+    font-size: 9px;
+    color: #444;
+    margin: 0 0 10px;
+    line-height: 1.35;
+    grid-column: 1 / -1;
+  }
   .num {
     position: absolute;
     top: 1px; left: 2px;
-    font-size: ${CELL < 20 ? 5.5 : 7}px;
+    font-size: ${COL_PX < 20 ? 5.5 : 7}px;
     font-weight: 700;
     line-height: 1;
     color: #222;
   }
   .letter {
-    font-size: ${Math.max(11, CELL - 4)}px;
+    font-size: ${Math.max(11, COL_PX - 4)}px;
     font-weight: 900;
     color: #111;
     line-height: 1;
@@ -509,21 +726,20 @@ function generatePuzzleHTML(puzzleData, showSolution = false, omaName = 'Maria')
 <body>
 <div class="page">
 
-  <div class="masthead">
-    <div class="masthead-eyebrow">✦ &nbsp; Omas Rätselheft &nbsp; ✦</div>
-    <h1>Kreuzworträtsel</h1>
-  </div>
+  <div class="top-rule"></div>
 
   <div class="title-bar">
-    <h2>${title}</h2>
-    <span class="title-dedication">Für Oma ${omaName} ♥</span>
+    <h2>${safeTitle}</h2>
+    ${issueNo != null && issueNo !== '' ? `<span class="issue-no">Nr.&nbsp;${esc(String(issueNo))}</span>` : ''}
+    <span class="title-dedication">${dedicLine}</span>
   </div>
 
   <div class="layout">
     <div class="grid-col">
-      <div class="grid">${gridCells}</div>
+      <div class="grid-frame"><div class="grid">${gridCells}</div></div>
     </div>
     <div class="clues-below">
+      ${modeNote}
       <div class="clues-section">
         <div class="clues-heading">Waagerecht →</div>
         ${clueList(across)}
@@ -536,7 +752,7 @@ function generatePuzzleHTML(puzzleData, showSolution = false, omaName = 'Maria')
   </div>
 
   <div class="footer">
-    ${showSolution ? '✦ Lösungsblatt ✦' : `Viel Spaß beim Rätseln, liebe Oma ${omaName}! ♥`}
+    ${footerPlay}
   </div>
 
 </div>
@@ -579,7 +795,7 @@ async function getBrowser() {
 // ---------------------------------------------------------------------------
 
 app.post('/api/pdf', async (req, res) => {
-  const { puzzleData, solution = false, omaName = 'Maria' } = req.body;
+  const { puzzleData, solution = false, omaName = '', puzzleNumber } = req.body;
   if (!puzzleData) return res.status(400).json({ error: 'puzzleData fehlt' });
 
   let browser, page;
@@ -588,7 +804,7 @@ app.post('/api/pdf', async (req, res) => {
     page    = await browser.newPage();
 
     await page.setViewport({ width: 794, height: 2200, deviceScaleFactor: 1 });
-    await page.setContent(generatePuzzleHTML(puzzleData, solution, omaName), { waitUntil: 'networkidle0' });
+    await page.setContent(generatePuzzleHTML(puzzleData, solution, omaName, puzzleNumber ?? null), { waitUntil: 'networkidle0' });
 
     const contentH = await page.evaluate(() => {
       const box = document.querySelector('.page');
@@ -627,7 +843,7 @@ app.post('/api/pdf', async (req, res) => {
 // ---------------------------------------------------------------------------
 
 app.post('/api/png', async (req, res) => {
-  const { puzzleData, solution = false, omaName = 'Maria' } = req.body;
+  const { puzzleData, solution = false, omaName = '', puzzleNumber } = req.body;
   if (!puzzleData) return res.status(400).json({ error: 'puzzleData fehlt' });
 
   let browser, page;
@@ -636,7 +852,7 @@ app.post('/api/png', async (req, res) => {
     page    = await browser.newPage();
     await page.setViewport({ width: 794, height: 1123, deviceScaleFactor: 2 });
 
-    await page.setContent(generatePuzzleHTML(puzzleData, solution, omaName), { waitUntil: 'networkidle0' });
+    await page.setContent(generatePuzzleHTML(puzzleData, solution, omaName, puzzleNumber ?? null), { waitUntil: 'networkidle0' });
 
     const pngRaw  = await page.screenshot({ fullPage: true, type: 'png' });
     const pngBuf  = Buffer.isBuffer(pngRaw) ? pngRaw : Buffer.from(pngRaw);

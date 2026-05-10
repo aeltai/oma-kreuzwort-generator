@@ -4,6 +4,9 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Kreuzworträtsel für Oma</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=Dancing+Script:wght@600;700&display=swap" rel="stylesheet">
   <style>
     /* ===== BASE ===== */
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -147,12 +150,23 @@
       background: #fdfaf4;
       overflow: hidden;
       max-height: 0;
-      transition: max-height 0.35s ease, padding 0.35s ease;
+      transition: max-height 0.4s ease, padding 0.4s ease;
       padding: 0 24px;
     }
     .settings-panel.open {
-      max-height: 500px;
+      /* Genug Höhe für alle Felder; Inhalt per Scroll erreichbar */
+      max-height: min(88vh, 2400px);
+      overflow-x: hidden;
+      overflow-y: auto;
+      -webkit-overflow-scrolling: touch;
       padding: 18px 24px 20px;
+      position: relative;
+      z-index: 2;
+    }
+    /* Kein Inhalt unter dem aufgeklappten Panel: Willkommen & Fußzeile würden sonst die Maus „fangen“ */
+    #settingsPanel.open ~ #puzzleArea,
+    #settingsPanel.open ~ #puzzleFooter {
+      display: none !important;
     }
     .settings-inner {
       display: grid;
@@ -184,6 +198,114 @@
     }
     .settings-input:focus { border-color: #c8102e; }
 
+    .settings-select {
+      font-family: Arial, sans-serif;
+      font-size: 15px;
+      padding: 7px 10px;
+      border: 2px solid #ccc;
+      background: white;
+      width: 100%;
+      max-width: 100%;
+      color: #222;
+      outline: none;
+      cursor: pointer;
+    }
+    .settings-select:focus { border-color: #c8102e; }
+
+    .main-tabs {
+      display: flex;
+      gap: 0;
+      border-bottom: 2px solid #c8102e;
+      background: #faf6ee;
+      padding: 0 8px;
+    }
+    .main-tab {
+      font-family: Arial, Helvetica, sans-serif;
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: 0.5px;
+      text-transform: uppercase;
+      padding: 12px 16px;
+      border: none;
+      background: transparent;
+      cursor: pointer;
+      color: #444;
+      border-bottom: 3px solid transparent;
+      margin-bottom: -2px;
+    }
+    .main-tab:hover { background: rgba(200, 16, 46, 0.06); }
+    .main-tab.active {
+      color: #c8102e;
+      border-bottom-color: #c8102e;
+    }
+
+    .deck-panel {
+      padding: 20px 24px 28px;
+      background: #fffdf8;
+    }
+    .deck-panel h2 {
+      font-size: 20px;
+      margin-bottom: 8px;
+      color: #333;
+      font-weight: 700;
+    }
+    .deck-intro {
+      font-size: 14px;
+      color: #555;
+      margin-bottom: 18px;
+      line-height: 1.5;
+    }
+    .deck-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 16px 20px;
+      align-items: flex-end;
+      margin-bottom: 14px;
+    }
+    .deck-field label {
+      font-family: Arial, sans-serif;
+      font-size: 11px;
+      font-weight: 800;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      color: #c8102e;
+      display: block;
+      margin-bottom: 6px;
+    }
+    .deck-field input[type="number"] {
+      width: 80px;
+      padding: 9px 10px;
+      font-size: 15px;
+      border: 2px solid #ccc;
+      font-family: Arial, sans-serif;
+    }
+    .deck-check-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-family: Arial, sans-serif;
+      font-size: 14px;
+      color: #333;
+    }
+    .deck-progress {
+      margin-top: 16px;
+      font-family: Arial, sans-serif;
+      font-size: 14px;
+      color: #1a4a8a;
+      min-height: 1.4em;
+      line-height: 1.4;
+    }
+    .deck-link-btn {
+      background: none;
+      border: none;
+      color: #1a4a8a;
+      text-decoration: underline;
+      cursor: pointer;
+      font-size: 14px;
+      padding: 0;
+      font-family: Arial, sans-serif;
+    }
+
     .settings-textarea {
       font-family: Arial, sans-serif;
       font-size: 13px;
@@ -199,6 +321,59 @@
     }
     .settings-textarea:focus { border-color: #c8102e; }
     .settings-textarea::placeholder { color: #aaa; }
+
+    .settings-textarea.family-field {
+      min-height: 160px;
+      font-size: 13px;
+      line-height: 1.45;
+    }
+
+    .settings-checkbox-row {
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      font-family: Arial, sans-serif;
+      font-size: 13px;
+      line-height: 1.4;
+      color: #333;
+    }
+    .settings-checkbox-row input { margin-top: 3px; flex-shrink: 0; }
+    .settings-checkbox-row label { cursor: pointer; font-weight: 600; }
+
+    .r-type-details { margin-top: 4px; }
+    .r-type-details summary::-webkit-details-marker { display: none; }
+    .r-type-intro {
+      font-size: 13px;
+      color: #555;
+      margin: 10px 0 14px;
+      line-height: 1.5;
+    }
+    .r-opt {
+      display: block;
+      margin-bottom: 12px;
+      padding: 10px 12px;
+      border: 2px solid #ddd;
+      background: #fff;
+      cursor: pointer;
+      border-radius: 2px;
+    }
+    .r-opt:has(input:checked) {
+      border-color: #c8102e;
+      background: #fff8f6;
+    }
+    .r-opt input { margin-right: 10px; vertical-align: top; margin-top: 3px; }
+    .r-opt-inner { display: inline-block; max-width: calc(100% - 28px); vertical-align: top; }
+    .r-opt-title { font-weight: 900; font-size: 13px; margin-bottom: 6px; font-family: Arial, sans-serif; }
+    .r-opt-desc { font-size: 12px; color: #555; line-height: 1.45; font-weight: 400; }
+
+    .puzzle-mode-hint {
+      font-size: 12px;
+      color: #666;
+      margin: 0 0 12px;
+      padding: 8px 10px;
+      background: #f5f1e8;
+      border-left: 3px solid #c8102e;
+    }
 
     /* topic chips */
     .topic-grid {
@@ -293,9 +468,11 @@
       background: #111;
       gap: 0;
     }
-    .cell {
-      width: 38px;
-      height: 38px;
+    .crossword-grid .cell {
+      width: 100%;
+      height: 100%;
+      min-width: 0;
+      min-height: 0;
       border-right: 1.5px solid #444;
       border-bottom: 1.5px solid #444;
       position: relative;
@@ -330,6 +507,29 @@
       user-select: none;
     }
     .cell-letter.hidden { opacity: 0; }
+
+    .cell.cell-sweden {
+      flex-direction: column;
+      align-items: stretch;
+      justify-content: flex-end;
+      padding: 3px 4px 5px;
+    }
+    .sweden-mini {
+      width: 100%;
+      flex: 0 0 auto;
+      margin-bottom: 2px;
+    }
+    .sw-line-web {
+      font-size: 8px;
+      line-height: 1.2;
+      text-align: left;
+      color: #222;
+      word-break: break-word;
+    }
+    @media (min-width: 480px) {
+      .sw-line-web { font-size: 9px; }
+    }
+    .sw-line-web .arr { color: #c8102e; font-weight: 900; margin-right: 3px; }
 
     /* ===== CLUES ===== */
     .clues-section {
@@ -447,7 +647,6 @@
       .crossword-layout { gap: 14px; }
       .clues-below { gap: 0 24px; }
 
-      .cell { width: 32px; height: 32px; }
       .cell-num { font-size: 7px; }
       .cell-letter { font-size: 15px; }
 
@@ -471,9 +670,211 @@
 
       @page { margin: 10mm; size: A4 portrait; }
     }
+
+    /* ===== LANDING OVERLAY ===== */
+    #landing {
+      position: fixed;
+      inset: 0;
+      z-index: 9999;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+      overflow-y: auto;
+      background-color: #f0e3cc;
+      background-image:
+        radial-gradient(ellipse 65% 45% at 18% 12%, #f9ead4 0%, transparent 55%),
+        radial-gradient(ellipse 60% 50% at 82% 88%, #e8d5bb 0%, transparent 55%),
+        url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='80' height='80'%3E%3Cg opacity='0.11' fill='%23a07040'%3E%3Ccircle cx='40' cy='40' r='2.8'/%3E%3Cellipse cx='40' cy='33' rx='2.2' ry='4.5'/%3E%3Cellipse cx='40' cy='47' rx='2.2' ry='4.5'/%3E%3Cellipse cx='33' cy='40' rx='4.5' ry='2.2'/%3E%3Cellipse cx='47' cy='40' rx='4.5' ry='2.2'/%3E%3Ccircle cx='8' cy='8' r='1.8'/%3E%3Ccircle cx='72' cy='8' r='1.8'/%3E%3Ccircle cx='8' cy='72' r='1.8'/%3E%3Ccircle cx='72' cy='72' r='1.8'/%3E%3C/g%3E%3C/svg%3E");
+      animation: landingFadeIn 0.7s ease both;
+      transition: opacity 0.85s ease;
+    }
+    @keyframes landingFadeIn {
+      from { opacity: 0; }
+      to   { opacity: 1; }
+    }
+    #landing.fade-out {
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    .landing-card {
+      max-width: 580px;
+      width: 100%;
+      background: #fffcf4;
+      border: 2px solid #c9945a;
+      box-shadow:
+        inset 0 0 0 5px #fffcf4,
+        inset 0 0 0 8px #c9945a,
+        0 16px 60px rgba(100, 58, 18, 0.22);
+      padding: 56px 54px 46px;
+      text-align: center;
+      position: relative;
+      animation: cardRise 0.75s 0.12s ease both;
+    }
+    @keyframes cardRise {
+      from { opacity: 0; transform: translateY(20px); }
+      to   { opacity: 1; transform: translateY(0);    }
+    }
+
+    .landing-eyebrow {
+      font-family: Arial, Helvetica, sans-serif;
+      font-size: 10.5px;
+      font-weight: 700;
+      letter-spacing: 3.5px;
+      text-transform: uppercase;
+      color: #c9945a;
+      margin-bottom: 20px;
+    }
+
+    .landing-title {
+      font-family: 'Playfair Display', 'Georgia', 'Times New Roman', serif;
+      font-size: 58px;
+      font-weight: 700;
+      color: #2e1d0e;
+      line-height: 1.06;
+      letter-spacing: -0.5px;
+      margin-bottom: 10px;
+    }
+
+    .landing-cursive {
+      font-family: 'Dancing Script', 'Georgia', cursive;
+      font-size: 33px;
+      font-weight: 600;
+      color: #c8102e;
+      margin-bottom: 26px;
+      line-height: 1.2;
+    }
+
+    .landing-divider {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      margin: 0 auto 26px;
+      max-width: 280px;
+    }
+    .landing-divider::before,
+    .landing-divider::after {
+      content: '';
+      flex: 1;
+      height: 1px;
+      background: linear-gradient(to right, transparent, #c9945a, transparent);
+    }
+    .landing-desc {
+      font-family: 'Georgia', 'Times New Roman', serif;
+      font-size: 16.5px;
+      line-height: 1.75;
+      color: #5a3a1c;
+      margin: 0 auto 30px;
+      max-width: 430px;
+    }
+
+    .landing-features {
+      display: flex;
+      justify-content: center;
+      gap: 14px;
+      margin-bottom: 36px;
+      flex-wrap: wrap;
+    }
+
+    .landing-feature {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 7px;
+      background: #faf2e4;
+      border: 1.5px solid #ddc99a;
+      padding: 12px 22px;
+      min-width: 96px;
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+    .landing-feature:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 6px 16px rgba(160, 100, 30, 0.15);
+    }
+    .landing-feature .f-label {
+      font-family: Arial, Helvetica, sans-serif;
+      font-size: 10.5px;
+      font-weight: 700;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      color: #8b6030;
+    }
+
+    .landing-btn {
+      display: inline-block;
+      background: #c8102e;
+      color: white;
+      padding: 17px 52px;
+      font-family: 'Georgia', 'Times New Roman', serif;
+      font-size: 18px;
+      font-weight: 700;
+      letter-spacing: 0.8px;
+      cursor: pointer;
+      border: 3px solid #8b0a1f;
+      transition: all 0.2s ease;
+      box-shadow: 0 5px 18px rgba(200, 16, 46, 0.3);
+      margin-bottom: 20px;
+    }
+    .landing-btn:hover {
+      background: #a50d25;
+      transform: translateY(-2px);
+      box-shadow: 0 8px 24px rgba(200, 16, 46, 0.4);
+    }
+    .landing-btn:active { transform: translateY(0); }
+
+    .landing-footnote {
+      font-family: Arial, Helvetica, sans-serif;
+      font-size: 11.5px;
+      color: #a08060;
+      letter-spacing: 1px;
+    }
+
+    @media (max-width: 520px) {
+      .landing-card     { padding: 38px 22px 34px; }
+      .landing-title    { font-size: 40px; }
+      .landing-cursive  { font-size: 26px; }
+      .landing-desc     { font-size: 15px; }
+      .landing-btn      { padding: 15px 32px; font-size: 16px; }
+      .landing-features { gap: 10px; }
+      .landing-feature  { min-width: 80px; padding: 12px 14px 10px; }
+    }
   </style>
 </head>
 <body>
+
+<!-- ===== LANDING PAGE OVERLAY ===== -->
+<div id="landing" role="dialog" aria-modal="true" aria-label="Willkommen">
+  <div class="landing-card">
+
+    <p class="landing-eyebrow">Eine liebevolle Überraschung</p>
+
+    <h1 class="landing-title">Kreuzworträtsel</h1>
+    <p class="landing-cursive">für Oma &amp; Opa</p>
+
+    <div class="landing-divider"></div>
+
+    <p class="landing-desc">
+      Hier entstehen ganz persönliche Rätsel – zugeschnitten auf das Leben und
+      die schönen Erinnerungen Ihrer Liebsten. Herzlich, einfach, und mit
+      großen Buchstaben zum Ausdrucken.
+    </p>
+
+    <div class="landing-features">
+      <div class="landing-feature"><span class="f-label">Persönlich</span></div>
+      <div class="landing-feature"><span class="f-label">Gemütlich</span></div>
+      <div class="landing-feature"><span class="f-label">Liebevoll</span></div>
+      <div class="landing-feature"><span class="f-label">Zum Drucken</span></div>
+    </div>
+
+    <button class="landing-btn" onclick="dismissLanding()">
+      Rätsel erstellen
+    </button>
+
+    <p class="landing-footnote">Kostenlos · Auf Deutsch · Für geliebte Menschen</p>
+
+  </div>
+</div>
 
 <div class="page">
 
@@ -483,6 +884,14 @@
     <h1>Kreuzworträtsel</h1>
   </header>
 
+  <nav class="main-tabs no-print" role="tablist" aria-label="Hauptbereich">
+    <button type="button" class="main-tab active" id="tabPuzzleBtn" role="tab" aria-selected="true"
+      onclick="switchMainTab('puzzle')">Einzelrätsel</button>
+    <button type="button" class="main-tab" id="tabDeckBtn" role="tab" aria-selected="false"
+      onclick="switchMainTab('deck')">Stapel &amp; ZIP</button>
+  </nav>
+
+  <div id="panelPuzzle">
   <!-- Controls -->
   <div class="controls no-print" id="controls">
     <button class="btn btn-red" id="generateBtn" onclick="generatePuzzle()">
@@ -512,22 +921,89 @@
 
       <!-- Name -->
       <div class="settings-group">
-        <label class="settings-label" for="inputName">Name der Oma</label>
-        <input class="settings-input" id="inputName" type="text" value="Maria"
-               placeholder="z.B. Maria" oninput="saveSettings()">
+        <label class="settings-label" for="inputName">Vorname (optional)</label>
+        <input class="settings-input" id="inputName" type="text" value=""
+               placeholder="z. B. Maria — für Ansprache im Rätsel und PDF"
+               oninput="saveSettings()">
       </div>
 
-      <!-- Custom context -->
+      <div class="settings-group settings-full">
+        <label class="settings-label" for="selectHealthProfile">Krankheitsbild / Unterstützung (optional)</label>
+        <select class="settings-select" id="selectHealthProfile" onchange="saveSettings()">
+          <option value="none">Kein besonderer Fokus</option>
+          <option value="demenz">Demenz / leichte kognitive Einschränkung</option>
+          <option value="depression">Depression / wenig Antrieb / Konzentration</option>
+          <option value="schlaganfall">Nach Schlaganfall — Sprache &amp; Lesen</option>
+          <option value="parkinson">Parkinson — Motorik, klare Hinweise</option>
+          <option value="sehschwaeche">Sehschwäche</option>
+          <option value="angst">Ängstlichkeit / Unruhe</option>
+        </select>
+      </div>
+
+      <div class="settings-group settings-full">
+        <label class="settings-label" for="selectDifficulty">Schwierigkeitsgrad</label>
+        <select class="settings-select" id="selectDifficulty" onchange="saveSettings()">
+          <option value="sehr_leicht">Sehr leicht (kurze Wörter, sehr direkte Hinweise)</option>
+          <option value="leicht" selected>Leicht</option>
+          <option value="mittel">Mittel (etwas kniffliger, aber fair)</option>
+        </select>
+      </div>
+
+      <!-- Short hints -->
       <div class="settings-group">
-        <label class="settings-label" for="inputContext">Persönliche Hinweise</label>
+        <label class="settings-label" for="inputContext">Kurze Zusatzwünsche (optional)</label>
         <textarea class="settings-textarea" id="inputContext"
-          placeholder="z.B. Lieblingskomponist ist Mozart, kommt aus Sudetenland, mag Rosen …"
+          placeholder="Nur wenn Sie keine lange Familiengeschichte nutzen: z. B. ‚mag klassische Musik, Rosen, Bayern …‘"
           oninput="saveSettings()"></textarea>
+      </div>
+
+      <!-- Family story -->
+      <div class="settings-group settings-full">
+        <div class="settings-checkbox-row">
+          <input type="checkbox" id="chkUseFamily" checked onchange="saveSettings()">
+          <label for="chkUseFamily">Persönliche Familie, Berufe, Orte &amp; Beziehungen ins Rätsel einbeziehen (aus dem Kasten unten)</label>
+        </div>
+        <label class="settings-label" for="familyStory" style="margin-top:10px">Familie &amp; Lebensgeschichte (optional, freier Text)</label>
+        <textarea class="settings-textarea family-field" id="familyStory"
+          placeholder="Hier können Sie alles einfügen: Ehepartner, Kinder, Enkel, Berufe, Städte, Schulen, besondere Erinnerungen … Je konkreter, desto persönlicher werden Wörter und Hinweise im Kreuzworträtsel."
+          oninput="saveSettings()"></textarea>
+      </div>
+
+      <!-- Rätselart -->
+      <div class="settings-group settings-full">
+        <details class="r-type-details" open>
+          <summary class="settings-label" style="cursor:pointer;user-select:none;list-style:none">Rätselart wählen</summary>
+          <p class="r-type-intro">Je nachdem, wie viel Platz Sie haben und wie <strong>knifflig</strong> oder <strong>übersichtlich</strong> es sein soll, eignen sich verschiedene Formen. (Technisch nutzen wir ein gemeinsames Wortgitter — die Darstellung passt sich an.)</p>
+
+          <label class="r-opt">
+            <input type="radio" name="puzzleType" value="schweden" onchange="saveSettings()">
+            <span class="r-opt-inner">
+              <div class="r-opt-title">1. Schwedenstil (Komfort wie in der Zeitschrift)</div>
+              <div class="r-opt-desc">Kurze Fragen stehen <strong>direkt im Startkästchen</strong> mit Pfeil (→ waagerecht, ↓ senkrecht). Sie müssen nicht ständig zwischen Liste und Gitter hin- und herschauen. Zusätzlich gibt es die vollständige Liste unten zum Nachlesen.</div>
+            </span>
+          </label>
+
+          <label class="r-opt">
+            <input type="radio" name="puzzleType" value="standard" checked onchange="saveSettings()">
+            <span class="r-opt-inner">
+              <div class="r-opt-title">2. Standard-Kreuzworträtsel</div>
+              <div class="r-opt-desc">Im Gitter nur <strong>Nummern</strong>. Alle Fragen stehen <strong>unten</strong> getrennt in „Waagerecht“ und „Senkrecht“. Vorteil: viel Platz für längere, liebevolle Umschreibungen (z.&nbsp;B. mit Stadt- oder Familiengeschichte).</div>
+            </span>
+          </label>
+
+          <label class="r-opt">
+            <input type="radio" name="puzzleType" value="gitter" onchange="saveSettings()">
+            <span class="r-opt-inner">
+              <div class="r-opt-title">3. Gitter ohne Nummern</div>
+              <div class="r-opt-desc">Im Gitter <strong>keine Ziffern</strong> — nur weiße und schwarze Felder. Die Zuordnung der Wörter erfolgt über die <strong>Kreuzungen</strong> und die nummerierte Liste darunter. Wirkt oft ruhiger auf dem Papier; für manche Omis kniffliger.</div>
+            </span>
+          </label>
+        </details>
       </div>
 
       <!-- Topics — full width row -->
       <div class="settings-group settings-full">
-        <span class="settings-label">Themen wählen</span>
+        <span class="settings-label">Themen für <strong>allgemeine</strong> Begriffe (immer wählbar — bei Familientext werden sie mit persönlichen Hinweisen gemischt)</span>
         <div class="topic-grid" id="topicGrid">
           <!-- chips rendered by JS -->
         </div>
@@ -537,7 +1013,7 @@
   </div>
 
   <!-- Puzzle Area -->
-  <div class="puzzle-area" id="puzzleArea">
+  <div class="puzzle-area puzzle-idle" id="puzzleArea">
     <div class="state-msg" id="welcomeMsg">
       <div class="icon">🌸</div>
       <h3>Herzlich willkommen!</h3>
@@ -547,26 +1023,62 @@
 
   <!-- Footer -->
   <footer class="puzzle-footer" id="puzzleFooter" style="display:none">
-    <span class="puzzle-footer-left" id="footerLeft">Erstellt mit ❤ für Oma Maria</span>
+    <span class="puzzle-footer-left" id="footerLeft">Erstellt mit ❤ für die Familie</span>
     <span class="puzzle-footer-right">Viel Spaß beim Rätseln!</span>
   </footer>
 
+  </div><!-- /panelPuzzle -->
+
+  <div id="panelDeck" class="deck-panel no-print" style="display:none" role="tabpanel" aria-hidden="true">
+    <h2>Rätselstapel als ZIP</h2>
+    <p class="deck-intro">
+      Erzeugt nacheinander mehrere frische Rätsel mit Ihren <strong>Einstellungen</strong> (Themen, Familientext, Krankheitsbild, Schwierigkeit) und packt die PDFs in eine ZIP-Datei.
+      Das kann einige Minuten dauern — bitte das Fenster offen lassen.
+    </p>
+    <p class="deck-intro">
+      <button type="button" class="deck-link-btn" onclick="switchMainTab('puzzle'); toggleSettings();">Einstellungen öffnen</button>
+    </p>
+    <div class="deck-row">
+      <div class="deck-field">
+        <label for="deckCount">Anzahl Rätsel (1–15)</label>
+        <input type="number" id="deckCount" min="1" max="15" value="10"
+          onchange="saveDeckPrefs()" oninput="saveDeckPrefs()">
+      </div>
+      <div class="deck-check-row">
+        <input type="checkbox" id="deckIncludeSolutions" onchange="saveDeckPrefs()">
+        <label for="deckIncludeSolutions" style="margin:0;font-weight:600">Pro Rätsel auch Lösungs-PDF packen</label>
+      </div>
+    </div>
+    <button type="button" class="btn btn-red" id="deckZipBtn" onclick="buildDeckZip()">
+      <span>📦</span> Stapel erzeugen &amp; ZIP laden
+    </button>
+    <div class="deck-progress" id="deckProgress"></div>
+  </div>
+
 </div>
 
+<script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
 <script>
   // ---- Topic definitions ----
   const TOPICS = [
-    { id: 'musik',       label: 'Klassische Musik',    icon: '🎵', default: true  },
-    { id: 'bayern',      label: 'Bayern & Heimat',     icon: '🏔',  default: true  },
+    { id: 'musik',       label: 'Klassische Musik',    icon: '🎵', default: false },
+    { id: 'bayern',      label: 'Bayern & Heimat',     icon: '🏔',  default: false },
     { id: 'kochen',      label: 'Kochen & Backen',     icon: '🍰', default: true  },
     { id: 'natur',       label: 'Natur & Garten',      icon: '🌿', default: true  },
     { id: 'blumen',      label: 'Blumen & Pflanzen',   icon: '🌸', default: false },
     { id: 'religion',    label: 'Religion & Kirche',   icon: '⛪', default: false },
-    { id: 'familie',     label: 'Familie & Alltag',    icon: '👨‍👩‍👧', default: false },
+    { id: 'familie',     label: 'Familie & Alltag',    icon: '👨‍👩‍👧', default: true  },
     { id: 'tiere',       label: 'Tiere',               icon: '🐦', default: false },
-    { id: 'geschichte',  label: 'Heimat & Geschichte', icon: '🏡', default: false },
+    { id: 'geschichte',  label: 'Heimat & Geschichte', icon: '🏡', default: true  },
     { id: 'gesundheit',  label: 'Gesundheit & Essen',  icon: '🥗', default: false },
   ];
+
+  function updateFooterLeftLabel() {
+    const name = document.getElementById('inputName').value.trim();
+    document.getElementById('footerLeft').textContent = name
+      ? `Erstellt mit ❤ für ${name}`
+      : 'Erstellt mit ❤ für die Familie';
+  }
 
   // ---- Settings persistence ----
   function getSettings() {
@@ -576,20 +1088,36 @@
   }
 
   function saveSettings() {
-    const name    = document.getElementById('inputName').value.trim();
-    const context = document.getElementById('inputContext').value.trim();
+    const name        = document.getElementById('inputName').value.trim();
+    const context     = document.getElementById('inputContext').value.trim();
+    const familyStory = document.getElementById('familyStory').value.trim();
+    const useFamilyStory = document.getElementById('chkUseFamily').checked;
+    const puzzleType = document.querySelector('input[name="puzzleType"]:checked')?.value || 'standard';
+    const healthProfile = document.getElementById('selectHealthProfile')?.value || 'none';
+    const difficulty = document.getElementById('selectDifficulty')?.value || 'leicht';
     const topics  = TOPICS
       .filter(t => document.getElementById('chip-' + t.id)?.classList.contains('selected'))
       .map(t => t.label);
-    localStorage.setItem('ratsel-settings', JSON.stringify({ name, topics, customContext: context }));
-    // live-update footer
-    document.getElementById('footerLeft').textContent = `Erstellt mit ❤ für Oma ${name || 'Maria'}`;
+    localStorage.setItem('ratsel-settings', JSON.stringify({
+      name,
+      topics,
+      customContext: context,
+      familyStory,
+      useFamilyStory,
+      puzzleType,
+      healthProfile: ['none', 'demenz', 'depression', 'schlaganfall', 'parkinson', 'sehschwaeche', 'angst'].includes(healthProfile) ? healthProfile : 'none',
+      difficulty: ['sehr_leicht', 'leicht', 'mittel'].includes(difficulty) ? difficulty : 'leicht',
+    }));
+    updateFooterLeftLabel();
   }
 
   function loadSettings() {
     const s = getSettings();
-    document.getElementById('inputName').value    = s.name    || 'Maria';
+    document.getElementById('inputName').value    = s.name ?? '';
     document.getElementById('inputContext').value = s.customContext || '';
+    document.getElementById('familyStory').value  = s.familyStory || '';
+    const chk = document.getElementById('chkUseFamily');
+    chk.checked = s.useFamilyStory !== false;
 
     const selectedTopics = s.topics && s.topics.length ? new Set(s.topics) : null;
     TOPICS.forEach(t => {
@@ -598,8 +1126,20 @@
       const shouldSelect = selectedTopics ? selectedTopics.has(t.label) : t.default;
       chip.classList.toggle('selected', shouldSelect);
     });
-    document.getElementById('footerLeft').textContent =
-      `Erstellt mit ❤ für Oma ${s.name || 'Maria'}`;
+    const pt = ['standard', 'schweden', 'gitter'].includes(s.puzzleType) ? s.puzzleType : 'standard';
+    document.querySelectorAll('input[name="puzzleType"]').forEach(r => { r.checked = r.value === pt; });
+
+    const hpAllowed = new Set(['none', 'demenz', 'depression', 'schlaganfall', 'parkinson', 'sehschwaeche', 'angst']);
+    const hp = hpAllowed.has(s.healthProfile) ? s.healthProfile : 'none';
+    const selHp = document.getElementById('selectHealthProfile');
+    if (selHp) selHp.value = hp;
+
+    const diffAllowed = new Set(['sehr_leicht', 'leicht', 'mittel']);
+    const diff = diffAllowed.has(s.difficulty) ? s.difficulty : 'leicht';
+    const selDiff = document.getElementById('selectDifficulty');
+    if (selDiff) selDiff.value = diff;
+
+    updateFooterLeftLabel();
   }
 
   // ---- Render topic chips ----
@@ -624,9 +1164,153 @@
     btn.classList.toggle('active', open);
   }
 
+  function switchMainTab(which) {
+    const puzzlePanel = document.getElementById('panelPuzzle');
+    const deckPanel   = document.getElementById('panelDeck');
+    const tabP = document.getElementById('tabPuzzleBtn');
+    const tabD = document.getElementById('tabDeckBtn');
+    if (!puzzlePanel || !deckPanel || !tabP || !tabD) return;
+
+    if (which === 'deck') {
+      puzzlePanel.style.display = 'none';
+      deckPanel.style.display = 'block';
+      tabP.classList.remove('active');
+      tabD.classList.add('active');
+      tabP.setAttribute('aria-selected', 'false');
+      tabD.setAttribute('aria-selected', 'true');
+      deckPanel.setAttribute('aria-hidden', 'false');
+    } else {
+      puzzlePanel.style.display = '';
+      deckPanel.style.display = 'none';
+      tabP.classList.add('active');
+      tabD.classList.remove('active');
+      tabP.setAttribute('aria-selected', 'true');
+      tabD.setAttribute('aria-selected', 'false');
+      deckPanel.setAttribute('aria-hidden', 'true');
+    }
+  }
+
+  function saveDeckPrefs() {
+    let n = parseInt(document.getElementById('deckCount').value, 10);
+    if (Number.isNaN(n)) n = 10;
+    n = Math.min(15, Math.max(1, n));
+    document.getElementById('deckCount').value = String(n);
+    localStorage.setItem('ratsel-deck', JSON.stringify({
+      count: n,
+      includeSolutions: document.getElementById('deckIncludeSolutions').checked,
+    }));
+  }
+
+  function loadDeckPrefs() {
+    try {
+      const d = JSON.parse(localStorage.getItem('ratsel-deck') || '{}');
+      let n = parseInt(d.count, 10);
+      if (Number.isNaN(n)) n = 10;
+      n = Math.min(15, Math.max(1, n));
+      document.getElementById('deckCount').value = String(n);
+      document.getElementById('deckIncludeSolutions').checked = !!d.includeSolutions;
+    } catch {
+      document.getElementById('deckCount').value = '10';
+      document.getElementById('deckIncludeSolutions').checked = false;
+    }
+  }
+
+  async function buildDeckZip() {
+    if (typeof JSZip === 'undefined') {
+      alert('ZIP-Bibliothek konnte nicht geladen werden. Bitte Seite neu laden.');
+      return;
+    }
+    const btn = document.getElementById('deckZipBtn');
+    const prog = document.getElementById('deckProgress');
+    let n = parseInt(document.getElementById('deckCount').value, 10);
+    if (Number.isNaN(n)) n = 10;
+    n = Math.min(15, Math.max(1, n));
+    document.getElementById('deckCount').value = String(n);
+    const withSolutions = document.getElementById('deckIncludeSolutions').checked;
+    const omaName = (getSettings().name || '').trim();
+
+    async function readError(res) {
+      try {
+        const j = await res.json();
+        return j.error || res.statusText;
+      } catch {
+        return res.statusText || 'Unbekannter Fehler';
+      }
+    }
+
+    btn.disabled = true;
+    prog.textContent = '';
+
+    try {
+      const zip = new JSZip();
+      const folder = zip.folder('kreuzwortratsel-stapel');
+
+      for (let i = 1; i <= n; i++) {
+        prog.textContent = `Rätsel ${i} von ${n}: Claude erzeugt Wörter …`;
+        const genRes = await fetch('/api/generate', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ settings: getSettings() }),
+        });
+        const data = await genRes.json();
+        if (!genRes.ok || data.error) {
+          throw new Error(data.error || `Generierung fehlgeschlagen (HTTP ${genRes.status}).`);
+        }
+
+        prog.textContent = `Rätsel ${i} von ${n}: PDF (Spielen) …`;
+        const pdfRes = await fetch('/api/pdf', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            puzzleData: data,
+            solution: false,
+            omaName,
+            puzzleNumber: i,
+          }),
+        });
+        if (!pdfRes.ok) throw new Error(await readError(pdfRes));
+        const pdfBlob = await pdfRes.blob();
+        folder.file(`ratsel-${String(i).padStart(2, '0')}.pdf`, pdfBlob);
+
+        if (withSolutions) {
+          prog.textContent = `Rätsel ${i} von ${n}: PDF (Lösung) …`;
+          const solRes = await fetch('/api/pdf', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              puzzleData: data,
+              solution: true,
+              omaName,
+              puzzleNumber: i,
+            }),
+          });
+          if (!solRes.ok) throw new Error(await readError(solRes));
+          const solBlob = await solRes.blob();
+          folder.file(`loesung-${String(i).padStart(2, '0')}.pdf`, solBlob);
+        }
+      }
+
+      prog.textContent = 'ZIP wird zusammengestellt …';
+      const blob = await zip.generateAsync({ type: 'blob' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'kreuzwortratsel-stapel.zip';
+      a.click();
+      URL.revokeObjectURL(url);
+      prog.textContent = `Fertig: ${n} Rätsel${withSolutions ? ' inkl. Lösungs-PDFs' : ''} im Ordner „kreuzwortratsel-stapel“.`;
+    } catch (err) {
+      prog.textContent = 'Abbruch: ' + err.message;
+      alert(err.message);
+    } finally {
+      btn.disabled = false;
+    }
+  }
+
   // ---- Startup ----
   renderTopicChips();
   loadSettings();
+  loadDeckPrefs();
 
   // ---- State ----
   let currentPuzzle = null;
@@ -641,6 +1325,7 @@
     const solBtn = document.getElementById('solutionBtn');
 
     btn.disabled = true;
+    area.classList.remove('puzzle-idle');
     solBtn.style.display = 'none';
     document.getElementById('printBtn').style.display = 'none';
     document.getElementById('solutionPrintBtn').style.display = 'none';
@@ -694,8 +1379,17 @@
     }
   }
 
+  function clueShort(text, maxLen) {
+    const t = String(text || '').trim();
+    if (t.length <= maxLen) return t;
+    return t.slice(0, Math.max(1, maxLen - 1)).trim() + '…';
+  }
+
   function renderPuzzle(data) {
     const { title, gridWidth, gridHeight, words } = data;
+    const puzzleType = ['standard', 'schweden', 'gitter'].includes(data.puzzleType)
+      ? data.puzzleType
+      : 'standard';
 
     // Build letter grid
     const grid = Array.from({ length: gridHeight }, () => Array(gridWidth).fill(null));
@@ -717,8 +1411,11 @@
       if (w.number !== undefined) numMap[key] = w.number;
     }
 
+    const colPx = 38;
+    const rowPx = puzzleType === 'schweden' ? 54 : 38;
+
     // ---- Grid HTML ----
-    let gridHtml = `<div class="crossword-grid" style="grid-template-columns: repeat(${gridWidth}, 38px)">`;
+    let gridHtml = `<div class="crossword-grid" style="grid-template-columns: repeat(${gridWidth}, ${colPx}px); grid-template-rows: repeat(${gridHeight}, ${rowPx}px)">`;
     for (let r = 0; r < gridHeight; r++) {
       for (let c = 0; c < gridWidth; c++) {
         const letter = grid[r][c];
@@ -727,11 +1424,24 @@
           gridHtml += `<div class="cell black"></div>`;
         } else {
           const num = numMap[key];
-          const numHtml = num ? `<span class="cell-num">${num}</span>` : '';
-          gridHtml += `<div class="cell">
-            ${numHtml}
-            <span class="cell-letter hidden">${letter}</span>
-          </div>`;
+          const wordsHere = words.filter(w => w.row === r && w.col === c);
+          const isStart = wordsHere.length > 0;
+          const swedenClass = puzzleType === 'schweden' && isStart ? ' cell-sweden' : '';
+
+          let inner;
+          if (puzzleType === 'schweden' && isStart) {
+            const wa = wordsHere.find(w => w.direction === 'across');
+            const wd = wordsHere.find(w => w.direction === 'down');
+            let sw = '<div class="sweden-mini">';
+            if (wa) sw += `<div class="sw-line-web"><span class="arr">→</span>${escHtml(clueShort(wa.clue, 52))}</div>`;
+            if (wd) sw += `<div class="sw-line-web"><span class="arr">↓</span>${escHtml(clueShort(wd.clue, 52))}</div>`;
+            sw += '</div>';
+            inner = `${sw}<span class="cell-letter hidden">${letter}</span>`;
+          } else {
+            const numHtml = puzzleType !== 'gitter' && num ? `<span class="cell-num">${num}</span>` : '';
+            inner = `${numHtml}<span class="cell-letter hidden">${letter}</span>`;
+          }
+          gridHtml += `<div class="cell${swedenClass}">${inner}</div>`;
         }
       }
     }
@@ -748,7 +1458,14 @@
       </div>`
     ).join('');
 
+    const modeHint = puzzleType === 'schweden'
+      ? '<p class="puzzle-mode-hint"><strong>Schwedenstil:</strong> Kurze Hinweise stehen in den Startkästchen. Die Liste hier ist zum bequemen Nachschlagen.</p>'
+      : puzzleType === 'gitter'
+        ? '<p class="puzzle-mode-hint"><strong>Gitter ohne Nummern:</strong> Im Gitter keine Ziffern – die Wörter finden Sie über die Kreuzungen und diese Liste.</p>'
+        : '';
+
     const cluesHtml = `
+      ${modeHint}
       <div class="clues-below">
         <div class="clues-section">
           <div class="clues-heading">Waagerecht →</div>
@@ -765,7 +1482,10 @@
       <div class="puzzle-title-bar">
         <h2>${escHtml(title)}</h2>
         <span class="puzzle-number-badge">Nr.&nbsp;${puzzleCount}</span>
-        <span class="puzzle-dedication">Für Oma ${escHtml(getSettings().name || 'Maria')}</span>
+        <span class="puzzle-dedication">${(() => {
+          const n = (getSettings().name || '').trim();
+          return n ? `Für ${escHtml(n)}` : 'Mit lieben Grüßen';
+        })()}</span>
       </div>
       <div class="crossword-layout">
         <div class="grid-column">${gridHtml}</div>
@@ -797,11 +1517,11 @@
     btn.innerHTML = '<span>⏳</span> Wird erstellt…';
 
     try {
-      const omaName = getSettings().name || 'Maria';
+      const omaName = (getSettings().name || '').trim();
       const res = await fetch(`/api/${format}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ puzzleData: currentPuzzle, solution, omaName }),
+        body: JSON.stringify({ puzzleData: currentPuzzle, solution, omaName, puzzleNumber: puzzleCount }),
       });
 
       if (!res.ok) {
@@ -824,6 +1544,12 @@
       btn.disabled = false;
       btn.innerHTML = originalText;
     }
+  }
+
+  function dismissLanding() {
+    const el = document.getElementById('landing');
+    el.classList.add('fade-out');
+    setTimeout(() => { el.style.display = 'none'; }, 900);
   }
 
   function escHtml(str) {
