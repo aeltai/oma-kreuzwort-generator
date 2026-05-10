@@ -590,16 +590,15 @@ async function fetchLoesungswortAfterPlacement(placedWords, title, settings) {
 }
 
 // ---------------------------------------------------------------------------
-// Crossword placement algorithm  — dense, maximises crossings
+// Crossword placement — letter-anchor engine, maximum density
 // ---------------------------------------------------------------------------
 
 function placeCrossword(wordObjects) {
   const nWords = wordObjects.length;
 
-  // Tighter grid: real crosswords pack ~1 letter per 1.5 cells
-  const SIZE = nWords <= 16 ? 13 : nWords <= 22 ? 15 : nWords <= 28 ? 17 : 19;
+  // Tight grid — letter-anchor approach fills it much better than a scan
+  const SIZE = nWords <= 16 ? 13 : nWords <= 22 ? 15 : nWords <= 28 ? 16 : 18;
 
-  // Sort longest-first; they anchor the most crossings
   const sorted = [...wordObjects].sort((a, b) => b.word.length - a.word.length);
 
   function tryPlacement(ordering) {
@@ -608,41 +607,24 @@ function placeCrossword(wordObjects) {
     const placed  = [];
     let   totalCrossings = 0;
 
+    // Letter → list of grid cells that carry that letter
+    const letterCells = {}; // letter -> [{r,c}]
+
     function hasLetter(r, c) {
       return r >= 0 && r < SIZE && c >= 0 && c < SIZE && grid[r][c] !== null;
     }
 
-    // Count letters adjacent to the proposed placement (encourages compactness)
-    function adjacencyBonus(word, row, col, dir) {
-      let bonus = 0;
-      for (let i = 0; i < word.length; i++) {
-        const r = dir === 'down'   ? row + i : row;
-        const c = dir === 'across' ? col + i : col;
-        if (grid[r][c] !== null) continue; // crossing cell — already counted
-        if (dir === 'across') {
-          if (hasLetter(r - 1, c)) bonus++;
-          if (hasLetter(r + 1, c)) bonus++;
-        } else {
-          if (hasLetter(r, c - 1)) bonus++;
-          if (hasLetter(r, c + 1)) bonus++;
-        }
-      }
-      return bonus;
-    }
-
-    // Returns crossing count if valid placement, -1 otherwise
     function evaluatePlace(word, row, col, dir) {
       const endR = dir === 'down'   ? row + word.length - 1 : row;
       const endC = dir === 'across' ? col + word.length - 1 : col;
       if (row < 0 || col < 0 || endR >= SIZE || endC >= SIZE) return -1;
 
-      // No letter immediately before/after (prevents word-merging)
       if (dir === 'across') {
-        if (hasLetter(row, col - 1))          return -1;
-        if (hasLetter(row, col + word.length)) return -1;
+        if (hasLetter(row, col - 1))           return -1;
+        if (hasLetter(row, col + word.length))  return -1;
       } else {
-        if (hasLetter(row - 1, col))           return -1;
-        if (hasLetter(row + word.length, col)) return -1;
+        if (hasLetter(row - 1, col))            return -1;
+        if (hasLetter(row + word.length, col))  return -1;
       }
 
       let crossings = 0;
@@ -652,10 +634,9 @@ function placeCrossword(wordObjects) {
         const existing = grid[r][c];
         if (existing !== null) {
           if (existing !== word[i]) return -1;
-          if (dirGrid[r][c] === dir) return -1; // same-direction overlap
+          if (dirGrid[r][c] === dir) return -1;
           crossings++;
         } else {
-          // Reject if a parallel neighbour would create an illegal adjacency
           if (dir === 'across') {
             if (hasLetter(r - 1, c) || hasLetter(r + 1, c)) return -1;
           } else {
@@ -663,8 +644,7 @@ function placeCrossword(wordObjects) {
           }
         }
       }
-      if (placed.length > 0 && crossings === 0) return -1;
-      return crossings;
+      return crossings; // 0 allowed only for the first word (checked by caller)
     }
 
     function commitWord(wordObj, row, col, dir, crossings) {
@@ -674,54 +654,238 @@ function placeCrossword(wordObjects) {
         const c = dir === 'across' ? col + i : col;
         grid[r][c] = word[i];
         dirGrid[r][c] = dirGrid[r][c] && dirGrid[r][c] !== dir ? 'both' : dir;
+        if (!letterCells[word[i]]) letterCells[word[i]] = [];
+        letterCells[word[i]].push({ r, c });
       }
       placed.push({ ...wordObj, row, col, direction: dir });
-      totalCrossings += (crossings || 0);
+      totalCrossings += crossings;
     }
 
-    // First word: horizontal through centre
+    // First word: longest, horizontal through centre
     const first = ordering[0];
-    commitWord(first, Math.floor(SIZE / 2), Math.floor((SIZE - first.word.length) / 2), 'across', 0);
+    const startCol = Math.max(0, Math.floor((SIZE - first.word.length) / 2));
+    commitWord(first, Math.floor(SIZE / 2), startCol, 'across', 0);
 
-    // Remaining words: score = crossings^2 * 300 + adjacency*20 - distance*12
+    // Remaining words: anchor-based search
     for (let wi = 1; wi < ordering.length; wi++) {
       const wordObj = ordering[wi];
       const word    = wordObj.word;
       let best      = null;
       let bestScore = -Infinity;
 
-      for (const dir of ['across', 'down']) {
-        for (let r = 0; r < SIZE; r++) {
-          for (let c = 0; c < SIZE; c++) {
-            const crossings = evaluatePlace(word, r, c, dir);
-            if (crossings < 0) continue;
-            const dist  = Math.abs(r - SIZE / 2) + Math.abs(c - SIZE / 2);
-            const adj   = adjacencyBonus(word, r, c, dir);
-            // Crossings rewarded quadratically; distance penalised hard; adjacency bonus
-            const score = crossings * crossings * 300 + adj * 20 - dist * 12;
-            if (score > bestScore) { bestScore = score; best = { row: r, col: c, direction: dir, crossings }; }
+      // Build candidate set: only positions where word crosses an existing letter
+      // Phase 1: letter-anchor (only positions that guarantee a crossing)
+      const seen = new Set();
+      for (let wordPos = 0; wordPos < word.length; wordPos++) {
+        const ch = word[wordPos];
+        const cells = letterCells[ch];
+        if (!cells) continue;
+        for (const { r: gr, c: gc } of cells) {
+          const rowA = gr, colA = gc - wordPos;
+          const keyA = `A,${rowA},${colA}`;
+          if (!seen.has(keyA)) {
+            seen.add(keyA);
+            const cr = evaluatePlace(word, rowA, colA, 'across');
+            if (cr > 0) {
+              const dist  = Math.abs(rowA - SIZE / 2) + Math.abs(colA + word.length / 2 - SIZE / 2);
+              const score = cr * cr * 300 - dist * 10;
+              if (score > bestScore) { bestScore = score; best = { row: rowA, col: colA, direction: 'across', crossings: cr }; }
+            }
+          }
+          const rowD = gr - wordPos, colD = gc;
+          const keyD = `D,${rowD},${colD}`;
+          if (!seen.has(keyD)) {
+            seen.add(keyD);
+            const cr = evaluatePlace(word, rowD, colD, 'down');
+            if (cr > 0) {
+              const dist  = Math.abs(rowD + word.length / 2 - SIZE / 2) + Math.abs(colD - SIZE / 2);
+              const score = cr * cr * 300 - dist * 10;
+              if (score > bestScore) { bestScore = score; best = { row: rowD, col: colD, direction: 'down', crossings: cr }; }
+            }
           }
         }
       }
-      if (best) commitWord(wordObj, best.row, best.col, best.direction, best.crossings);
+
+      // Phase 2: full grid-scan fallback for words that share no letters yet
+      if (!best) {
+        for (const dir of ['across', 'down']) {
+          for (let r = 0; r < SIZE; r++) {
+            for (let c = 0; c < SIZE; c++) {
+              const cr = evaluatePlace(word, r, c, dir);
+              if (cr <= 0) continue; // still require at least 1 crossing
+              const dist  = Math.abs(r - SIZE / 2) + Math.abs(c + (dir==='across'?word.length/2:0) - SIZE / 2);
+              const score = cr * cr * 300 - dist * 10;
+              if (score > bestScore) { bestScore = score; best = { row: r, col: c, direction: dir, crossings: cr }; }
+            }
+          }
+        }
+      }
+
+      if (best) {
+        commitWord(wordObj, best.row, best.col, best.direction, best.crossings);
+      }
     }
     return { placed, totalCrossings };
   }
 
-  // Run up to 20 attempts; keep the attempt with the most crossings (not just word count)
-  let bestPlaced      = null;
-  let bestCount       = 0;
-  let bestCrossings   = -1;
-  const minGood       = Math.floor(nWords * 0.88);
+  // Dynamic ordering: after each word is fixed, sort remaining by shared-letter count
+  // with the already-placed set — most-shareable words come next
+  function dynamicOrderPlacement(seedOrdering) {
+    const grid    = Array.from({ length: SIZE }, () => Array(SIZE).fill(null));
+    const dirGrid = Array.from({ length: SIZE }, () => Array(SIZE).fill(null));
+    const placed  = [];
+    let   totalCrossings = 0;
+    const letterCells = {};
 
-  for (let attempt = 0; attempt < 20; attempt++) {
+    function hasLetter(r, c) {
+      return r >= 0 && r < SIZE && c >= 0 && c < SIZE && grid[r][c] !== null;
+    }
+    function evaluatePlace(word, row, col, dir) {
+      const endR = dir === 'down'   ? row + word.length - 1 : row;
+      const endC = dir === 'across' ? col + word.length - 1 : col;
+      if (row < 0 || col < 0 || endR >= SIZE || endC >= SIZE) return -1;
+      if (dir === 'across') {
+        if (hasLetter(row, col - 1))           return -1;
+        if (hasLetter(row, col + word.length))  return -1;
+      } else {
+        if (hasLetter(row - 1, col))            return -1;
+        if (hasLetter(row + word.length, col))  return -1;
+      }
+      let crossings = 0;
+      for (let i = 0; i < word.length; i++) {
+        const r = dir === 'down'   ? row + i : row;
+        const c = dir === 'across' ? col + i : col;
+        const existing = grid[r][c];
+        if (existing !== null) {
+          if (existing !== word[i]) return -1;
+          if (dirGrid[r][c] === dir) return -1;
+          crossings++;
+        } else {
+          if (dir === 'across') {
+            if (hasLetter(r - 1, c) || hasLetter(r + 1, c)) return -1;
+          } else {
+            if (hasLetter(r, c - 1) || hasLetter(r, c + 1)) return -1;
+          }
+        }
+      }
+      return crossings;
+    }
+    function commitWord(wordObj, row, col, dir, crossings) {
+      const { word } = wordObj;
+      for (let i = 0; i < word.length; i++) {
+        const r = dir === 'down'   ? row + i : row;
+        const c = dir === 'across' ? col + i : col;
+        grid[r][c] = word[i];
+        dirGrid[r][c] = dirGrid[r][c] && dirGrid[r][c] !== dir ? 'both' : dir;
+        if (!letterCells[word[i]]) letterCells[word[i]] = [];
+        letterCells[word[i]].push({ r, c });
+      }
+      placed.push({ ...wordObj, row, col, direction: dir });
+      totalCrossings += crossings;
+    }
+
+    // Shared-letter score: how many letters of word appear in current grid
+    function shareScore(word) {
+      const placedLetterSet = {};
+      for (const ch of Object.keys(letterCells)) placedLetterSet[ch] = true;
+      return [...word].filter(ch => placedLetterSet[ch]).length;
+    }
+
+    // Place first word
+    const first = seedOrdering[0];
+    const startCol = Math.max(0, Math.floor((SIZE - first.word.length) / 2));
+    commitWord(first, Math.floor(SIZE / 2), startCol, 'across', 0);
+
+    // Pool of remaining words (already ordered by length initially)
+    let pool = seedOrdering.slice(1);
+
+    while (pool.length > 0) {
+      // Re-sort pool: highest share-score first; ties broken by length
+      pool.sort((a, b) => {
+        const ds = shareScore(b.word) - shareScore(a.word);
+        return ds !== 0 ? ds : b.word.length - a.word.length;
+      });
+
+      let placed_any = false;
+      for (let pi = 0; pi < pool.length; pi++) {
+        const wordObj = pool[pi];
+        const word    = wordObj.word;
+        let best      = null;
+        let bestScore = -Infinity;
+
+        const seen = new Set();
+        for (let wordPos = 0; wordPos < word.length; wordPos++) {
+          const ch = word[wordPos];
+          const cells = letterCells[ch];
+          if (!cells) continue;
+          for (const { r: gr, c: gc } of cells) {
+            const rowA = gr, colA = gc - wordPos;
+            const keyA = `A,${rowA},${colA}`;
+            if (!seen.has(keyA)) {
+              seen.add(keyA);
+              const cr = evaluatePlace(word, rowA, colA, 'across');
+              if (cr > 0) {
+                const dist  = Math.abs(rowA - SIZE / 2) + Math.abs(colA + word.length / 2 - SIZE / 2);
+                const score = cr * cr * 300 - dist * 10;
+                if (score > bestScore) { bestScore = score; best = { row: rowA, col: colA, direction: 'across', crossings: cr }; }
+              }
+            }
+            const rowD = gr - wordPos, colD = gc;
+            const keyD = `D,${rowD},${colD}`;
+            if (!seen.has(keyD)) {
+              seen.add(keyD);
+              const cr = evaluatePlace(word, rowD, colD, 'down');
+              if (cr > 0) {
+                const dist  = Math.abs(rowD + word.length / 2 - SIZE / 2) + Math.abs(colD - SIZE / 2);
+                const score = cr * cr * 300 - dist * 10;
+                if (score > bestScore) { bestScore = score; best = { row: rowD, col: colD, direction: 'down', crossings: cr }; }
+              }
+            }
+          }
+        }
+        // Grid-scan fallback if no anchor found
+        if (!best) {
+          for (const dir of ['across', 'down']) {
+            for (let r = 0; r < SIZE; r++) {
+              for (let c = 0; c < SIZE; c++) {
+                const cr = evaluatePlace(word, r, c, dir);
+                if (cr <= 0) continue;
+                const dist = Math.abs(r - SIZE / 2) + Math.abs(c - SIZE / 2);
+                const score = cr * cr * 300 - dist * 10;
+                if (score > bestScore) { bestScore = score; best = { row: r, col: c, direction: dir, crossings: cr }; }
+              }
+            }
+          }
+        }
+        if (best) {
+          commitWord(wordObj, best.row, best.col, best.direction, best.crossings);
+          pool.splice(pi, 1);
+          placed_any = true;
+          break; // restart loop with updated share scores
+        }
+      }
+      if (!placed_any) break; // no remaining word can be placed
+    }
+    return { placed, totalCrossings };
+  }
+
+  // Run both strategies multiple times; keep best by crossing density
+  let bestPlaced    = null;
+  let bestScore     = -1;
+  const minGood     = Math.floor(nWords * 0.85);
+  const ATTEMPTS    = 24;
+
+  function runScore(placed, crossings) {
+    return crossings * 10 + placed.length;
+  }
+
+  for (let attempt = 0; attempt < ATTEMPTS; attempt++) {
     let ordering;
     if (attempt === 0) {
       ordering = sorted;
     } else {
-      // Keep top-3 longest to anchor, shuffle the rest
-      const top  = sorted.slice(0, 3);
-      const rest = [...sorted.slice(3)];
+      const top  = sorted.slice(0, 2);
+      const rest = [...sorted.slice(2)];
       for (let i = rest.length - 1; i > 0; i--) {
         const j = Math.floor(Math.random() * (i + 1));
         [rest[i], rest[j]] = [rest[j], rest[i]];
@@ -729,20 +893,20 @@ function placeCrossword(wordObjects) {
       ordering = [...top, ...rest];
     }
 
-    const { placed, totalCrossings } = tryPlacement(ordering);
-    // Primary: maximise crossings; secondary: word count
-    const better = placed.length > bestCount ||
-      (placed.length === bestCount && totalCrossings > bestCrossings);
-    if (better) {
-      bestCount     = placed.length;
-      bestCrossings = totalCrossings;
-      bestPlaced    = placed;
+    // Alternate between simple anchor and dynamic-order strategies
+    const { placed, totalCrossings } = attempt % 3 === 2
+      ? dynamicOrderPlacement(ordering)
+      : tryPlacement(ordering);
+
+    const sc = runScore(placed, totalCrossings);
+    if (sc > bestScore) {
+      bestScore  = sc;
+      bestPlaced = placed;
     }
-    // Stop early only when we have a dense result
-    if (bestCount >= minGood && bestCrossings >= Math.floor(bestCount * 1.2)) break;
+    if (placed.length >= minGood && totalCrossings >= placed.length * 1.3) break;
   }
 
-  if (!bestPlaced || bestPlaced.length < 10) return null;
+  if (!bestPlaced || bestPlaced.length < 8) return null;
 
   // Trim to bounding box
   let minR = SIZE, maxR = 0, minC = SIZE, maxC = 0;
