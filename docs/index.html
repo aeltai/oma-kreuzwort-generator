@@ -1,0 +1,335 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Kreuzwort-Generator für Oma ✦</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Playfair+Display:ital,wght@0,700;1,400&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --teal: #0f766e;
+      --teal-light: #14b8a6;
+      --teal-pale: #f0fdfa;
+      --warm: #fef3c7;
+      --dark: #1c1917;
+      --muted: #78716c;
+      --border: #e7e5e4;
+    }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      background: #fafaf9;
+      color: var(--dark);
+      line-height: 1.6;
+    }
+
+    /* ── Hero ── */
+    .hero {
+      background: linear-gradient(135deg, var(--teal) 0%, #134e4a 100%);
+      color: #fff;
+      padding: 5rem 1.5rem 4rem;
+      text-align: center;
+      position: relative;
+      overflow: hidden;
+    }
+    .hero::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.04'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+    }
+    .hero-badge {
+      display: inline-block;
+      background: rgba(255,255,255,0.15);
+      border: 1px solid rgba(255,255,255,0.25);
+      border-radius: 999px;
+      padding: 0.3rem 1rem;
+      font-size: 0.8rem;
+      font-weight: 500;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+      margin-bottom: 1.5rem;
+    }
+    .hero h1 {
+      font-family: 'Playfair Display', serif;
+      font-size: clamp(2.2rem, 6vw, 3.8rem);
+      font-weight: 700;
+      margin-bottom: 0.5rem;
+      line-height: 1.2;
+    }
+    .hero-sub {
+      font-family: 'Playfair Display', serif;
+      font-style: italic;
+      font-size: clamp(1rem, 2.5vw, 1.3rem);
+      opacity: 0.85;
+      margin-bottom: 2rem;
+    }
+    .hero p {
+      max-width: 560px;
+      margin: 0 auto 2.5rem;
+      font-size: 1.05rem;
+      opacity: 0.9;
+    }
+    .hero-actions {
+      display: flex;
+      gap: 1rem;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.75rem 1.75rem;
+      border-radius: 0.6rem;
+      font-weight: 600;
+      font-size: 1rem;
+      text-decoration: none;
+      transition: transform 0.15s, box-shadow 0.15s;
+    }
+    .btn:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(0,0,0,0.2); }
+    .btn-primary {
+      background: #fff;
+      color: var(--teal);
+    }
+    .btn-secondary {
+      background: rgba(255,255,255,0.12);
+      color: #fff;
+      border: 1.5px solid rgba(255,255,255,0.4);
+    }
+
+    /* ── Grid preview ── */
+    .preview-grid {
+      display: inline-grid;
+      grid-template-columns: repeat(5, 36px);
+      grid-template-rows: repeat(5, 36px);
+      gap: 2px;
+      margin: 3rem auto 0;
+      background: rgba(255,255,255,0.08);
+      border-radius: 8px;
+      padding: 8px;
+    }
+    .preview-cell {
+      width: 36px; height: 36px;
+      border-radius: 3px;
+      display: flex; align-items: center; justify-content: center;
+      font-weight: 700; font-size: 0.9rem;
+    }
+    .preview-cell.b { background: rgba(0,0,0,0.5); }
+    .preview-cell.w { background: rgba(255,255,255,0.9); color: var(--teal); }
+
+    /* ── Features ── */
+    .section {
+      padding: 4rem 1.5rem;
+      max-width: 1100px;
+      margin: 0 auto;
+    }
+    .section-title {
+      text-align: center;
+      font-family: 'Playfair Display', serif;
+      font-size: 2rem;
+      margin-bottom: 0.5rem;
+    }
+    .section-lede {
+      text-align: center;
+      color: var(--muted);
+      margin-bottom: 3rem;
+      font-size: 1.05rem;
+    }
+    .features {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+      gap: 1.5rem;
+    }
+    .feature {
+      background: #fff;
+      border: 1px solid var(--border);
+      border-radius: 1rem;
+      padding: 1.75rem;
+      transition: box-shadow 0.2s;
+    }
+    .feature:hover { box-shadow: 0 4px 20px rgba(0,0,0,0.07); }
+    .feature-icon {
+      font-size: 2rem;
+      margin-bottom: 0.75rem;
+    }
+    .feature h3 {
+      font-size: 1.05rem;
+      font-weight: 600;
+      margin-bottom: 0.4rem;
+    }
+    .feature p { color: var(--muted); font-size: 0.95rem; }
+
+    /* ── Languages ── */
+    .lang-section {
+      background: var(--teal-pale);
+      padding: 4rem 1.5rem;
+    }
+    .lang-grid {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.75rem;
+      justify-content: center;
+      max-width: 700px;
+      margin: 0 auto;
+    }
+    .lang-pill {
+      background: #fff;
+      border: 1px solid #99f6e4;
+      border-radius: 999px;
+      padding: 0.4rem 1.1rem;
+      font-size: 1rem;
+      font-weight: 500;
+      color: var(--teal);
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+    }
+
+    /* ── Deploy ── */
+    .deploy-section {
+      background: var(--warm);
+      padding: 4rem 1.5rem;
+      text-align: center;
+    }
+    .deploy-section h2 {
+      font-family: 'Playfair Display', serif;
+      font-size: 1.8rem;
+      margin-bottom: 0.5rem;
+    }
+    .deploy-section p {
+      color: var(--muted);
+      margin-bottom: 2rem;
+      max-width: 480px;
+      margin-left: auto;
+      margin-right: auto;
+    }
+    .deploy-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      background: #000;
+      color: #fff;
+      padding: 0.75rem 1.75rem;
+      border-radius: 0.6rem;
+      font-weight: 600;
+      text-decoration: none;
+      font-size: 1rem;
+      transition: transform 0.15s, opacity 0.15s;
+    }
+    .deploy-btn:hover { transform: translateY(-2px); opacity: 0.85; }
+
+    /* ── Footer ── */
+    footer {
+      text-align: center;
+      padding: 2rem 1rem;
+      color: var(--muted);
+      font-size: 0.9rem;
+      border-top: 1px solid var(--border);
+    }
+    footer a { color: var(--teal); text-decoration: none; }
+    footer a:hover { text-decoration: underline; }
+  </style>
+</head>
+<body>
+
+  <!-- HERO -->
+  <header class="hero">
+    <div class="hero-badge">✦ KI-Kreuzworträtsel</div>
+    <h1>Kreuzwort-Generator</h1>
+    <p class="hero-sub">für Oma &amp; alle Rätselliebhaber</p>
+    <p>Erstelle liebevoll gestaltete Schwedenrätsel mit Claude AI — personalisiert, mehrsprachig und als PDF/PNG druckfertig.</p>
+    <div class="hero-actions">
+      <a href="https://github.com/aeltai/oma-kreuzwort-generator" class="btn btn-primary">
+        <svg width="18" height="18" fill="currentColor" viewBox="0 0 24 24"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.3 3.438 9.8 8.205 11.385.6.113.82-.258.82-.577 0-.285-.01-1.04-.015-2.04-3.338.724-4.042-1.61-4.042-1.61C4.422 18.07 3.633 17.7 3.633 17.7c-1.087-.744.084-.729.084-.729 1.205.084 1.838 1.236 1.838 1.236 1.07 1.835 2.809 1.305 3.495.998.108-.776.417-1.305.76-1.605-2.665-.3-5.466-1.332-5.466-5.93 0-1.31.465-2.38 1.235-3.22-.135-.303-.54-1.523.105-3.176 0 0 1.005-.322 3.3 1.23.96-.267 1.98-.399 3-.405 1.02.006 2.04.138 3 .405 2.28-1.552 3.285-1.23 3.285-1.23.645 1.653.24 2.873.12 3.176.765.84 1.23 1.91 1.23 3.22 0 4.61-2.805 5.625-5.475 5.92.42.36.81 1.096.81 2.22 0 1.606-.015 2.896-.015 3.286 0 .315.21.69.825.57C20.565 21.795 24 17.295 24 12c0-6.63-5.37-12-12-12"/></svg>
+        GitHub ansehen
+      </a>
+      <a href="https://github.com/aeltai/oma-kreuzwort-generator#readme" class="btn btn-secondary">
+        📖 Anleitung
+      </a>
+    </div>
+
+    <!-- Mini crossword preview -->
+    <div class="preview-grid">
+      <div class="preview-cell b"></div><div class="preview-cell w">O</div><div class="preview-cell b"></div><div class="preview-cell w">L</div><div class="preview-cell b"></div>
+      <div class="preview-cell w">R</div><div class="preview-cell w">O</div><div class="preview-cell w">S</div><div class="preview-cell w">E</div><div class="preview-cell b"></div>
+      <div class="preview-cell b"></div><div class="preview-cell w">M</div><div class="preview-cell b"></div><div class="preview-cell w">I</div><div class="preview-cell w">E</div>
+      <div class="preview-cell w">T</div><div class="preview-cell w">A</div><div class="preview-cell w">N</div><div class="preview-cell w">T</div><div class="preview-cell w">E</div>
+      <div class="preview-cell b"></div><div class="preview-cell b"></div><div class="preview-cell b"></div><div class="preview-cell w">N</div><div class="preview-cell b"></div>
+    </div>
+  </header>
+
+  <!-- FEATURES -->
+  <section class="section">
+    <h2 class="section-title">Was kann der Generator?</h2>
+    <p class="section-lede">KI-gestützt, herzlich gestaltet — für jeden Anlass und jede Sprache.</p>
+    <div class="features">
+      <div class="feature">
+        <div class="feature-icon">🤖</div>
+        <h3>Claude AI</h3>
+        <p>Wörter und Hinweise werden von Anthropics Claude generiert — liebevoll auf Seniorinnen abgestimmt.</p>
+      </div>
+      <div class="feature">
+        <div class="feature-icon">🌍</div>
+        <h3>7 Sprachen</h3>
+        <p>Deutsch, Spanisch, Italienisch, Türkisch, Russisch, Griechisch und Arabisch — inkl. RTL-Unterstützung.</p>
+      </div>
+      <div class="feature">
+        <div class="feature-icon">💌</div>
+        <h3>Persönlich</h3>
+        <p>Vorname, Themen, Familiengeschichte — das Rätsel wird individuell auf die Empfängerin zugeschnitten.</p>
+      </div>
+      <div class="feature">
+        <div class="feature-icon">🖨️</div>
+        <h3>PDF &amp; PNG Export</h3>
+        <p>Druckfertige Ausgabe als PDF oder PNG — direkt ausdrucken, verschicken oder teilen.</p>
+      </div>
+      <div class="feature">
+        <div class="feature-icon">🩺</div>
+        <h3>Gesundheitsprofile</h3>
+        <p>Optionale Rücksicht auf Demenz, Depression, Sehschwäche, Schlaganfall, Parkinson oder Angst.</p>
+      </div>
+      <div class="feature">
+        <div class="feature-icon">🔑</div>
+        <h3>Lösungswort</h3>
+        <p>Schwedenstil mit verstecktem Lösungswort — als besondere Überraschung am Ende des Rätsels.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- LANGUAGES -->
+  <section class="lang-section">
+    <div style="max-width:1100px;margin:0 auto;text-align:center">
+      <h2 class="section-title">Unterstützte Sprachen</h2>
+      <p class="section-lede">Jede Sprache mit eigenem Zeichensatz, Schriftrichtung und KI-Prompt.</p>
+      <div class="lang-grid">
+        <div class="lang-pill">🇩🇪 Deutsch</div>
+        <div class="lang-pill">🇪🇸 Español</div>
+        <div class="lang-pill">🇮🇹 Italiano</div>
+        <div class="lang-pill">🇹🇷 Türkçe</div>
+        <div class="lang-pill">🇷🇺 Русский</div>
+        <div class="lang-pill">🇬🇷 Ελληνικά</div>
+        <div class="lang-pill">🇸🇦 العربية</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- DEPLOY -->
+  <section class="deploy-section">
+    <h2>Selbst deployen</h2>
+    <p>Einfach auf Vercel deployen — der Code ist bereits konfiguriert. Nur noch den Anthropic-API-Key eintragen und los.</p>
+    <a class="deploy-btn" href="https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2Faeltai%2Foma-kreuzwort-generator&env=ANTHROPIC_API_KEY&envDescription=Dein%20Anthropic%20API-Key%20(claude.ai%2Fapi)&envLink=https%3A%2F%2Fconsole.anthropic.com%2F&project-name=oma-kreuzwort-generator">
+      <svg width="20" height="20" viewBox="0 0 76 65" fill="currentColor"><path d="M37.5274 0L75.0548 65H0L37.5274 0Z"/></svg>
+      Deploy to Vercel
+    </a>
+  </section>
+
+  <footer>
+    <p>Made with ♥ für Oma &nbsp;·&nbsp; <a href="https://github.com/aeltai/oma-kreuzwort-generator">GitHub</a> &nbsp;·&nbsp; Powered by <a href="https://anthropic.com">Claude AI</a></p>
+  </footer>
+
+</body>
+</html>
