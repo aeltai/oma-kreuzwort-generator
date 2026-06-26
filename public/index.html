@@ -30,7 +30,7 @@
 
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=Dancing+Script:wght@600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=Dancing+Script:wght@600;700&family=Noto+Sans+Arabic:wght@400;700&family=Noto+Sans+SC&display=swap" rel="stylesheet">
   <style>
     /* ===== BASE ===== */
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -1292,6 +1292,32 @@
     }
     .hist-del-btn:hover { color: #c0392b; background: #fdecea; }
 
+    /* ===== MULTI-SCRIPT FONT SUPPORT ===== */
+    .lang-ar .cell-letter,
+    .lang-ar .clue-text,
+    .lang-ar .loeswort-slot,
+    .lang-ar .loeswort-hint {
+      font-family: 'Noto Sans Arabic', 'Arial', sans-serif;
+    }
+    .lang-ar .crossword-layout {
+      direction: rtl;
+    }
+    .lang-ar .clues-heading {
+      text-align: right;
+    }
+    .lang-ar .clue-item {
+      flex-direction: row-reverse;
+    }
+    .lang-ar .cell-letter {
+      font-size: 16px;
+    }
+    .lang-ru .cell-letter,
+    .lang-ru .clue-text { font-family: Arial, sans-serif; }
+    .lang-el .cell-letter,
+    .lang-el .clue-text { font-family: Arial, sans-serif; }
+    .lang-tr .cell-letter,
+    .lang-tr .clue-text { font-family: Arial, sans-serif; }
+
     /* ===== SOLUTION MODE ===== */
     body.show-solution .cell-letter { opacity: 1 !important; }
     body.show-solution .cell-letter.hidden { opacity: 0.55 !important; color: #c8102e !important; }
@@ -1647,42 +1673,18 @@
           oninput="saveSettings()"></textarea>
       </div>
 
-      <!-- Rätselart -->
-      <div class="settings-group settings-full">
-        <details class="r-type-details" open>
-          <summary class="settings-label r-type-summary">Rätselart wählen</summary>
-          <div class="r-type-details-body">
-            <div class="r-type-intro-card">
-              <p class="r-type-intro">Je nachdem, wie viel Platz Sie haben und wie <strong>knifflig</strong> oder <strong>übersichtlich</strong> es sein soll, eignen sich verschiedene Formen. <span class="r-type-intro-tech">Technisch nutzen wir ein gemeinsames Wortgitter — die Darstellung passt sich an.</span></p>
-            </div>
-
-            <div class="r-type-options">
-              <label class="r-opt">
-                <input type="radio" name="puzzleType" value="schweden" onchange="saveSettings()">
-                <span class="r-opt-inner">
-                  <div class="r-opt-title">1. Schwedenstil (knappe Hinweise wie in der Zeitschrift)</div>
-                  <div class="r-opt-desc">Im Gitter wie gewohnt nur <strong>Nummern</strong> an den Wortanfängen. Die Fragen sind bewusst <strong>kurz</strong> und stehen <strong>unten</strong> in der Liste (Waagerecht/Senkrecht) — nicht in den weißen Kästchen.</div>
-                </span>
-              </label>
-
-              <label class="r-opt">
-                <input type="radio" name="puzzleType" value="standard" checked onchange="saveSettings()">
-                <span class="r-opt-inner">
-                  <div class="r-opt-title">2. Standard-Kreuzworträtsel</div>
-                  <div class="r-opt-desc">Im Gitter nur <strong>Nummern</strong>. Alle Fragen stehen <strong>unten</strong> getrennt in „Waagerecht" und „Senkrecht". Vorteil: viel Platz für längere, liebevolle Umschreibungen (z.&nbsp;B. mit Stadt- oder Familiengeschichte).</div>
-                </span>
-              </label>
-
-              <label class="r-opt">
-                <input type="radio" name="puzzleType" value="gitter" onchange="saveSettings()">
-                <span class="r-opt-inner">
-                  <div class="r-opt-title">3. Gitter ohne Nummern</div>
-                  <div class="r-opt-desc">Im Gitter <strong>keine Ziffern</strong> — nur weiße und schwarze Felder. Die Zuordnung der Wörter erfolgt über die <strong>Kreuzungen</strong> und die nummerierte Liste darunter. Wirkt oft ruhiger auf dem Papier; für manche Omis kniffliger.</div>
-                </span>
-              </label>
-            </div>
-          </div>
-        </details>
+      <!-- Sprache / Language -->
+      <div class="settings-group">
+        <label class="settings-label" for="selectLanguage">Sprache / Language</label>
+        <select class="settings-select" id="selectLanguage" onchange="saveSettings()">
+          <option value="de">🇩🇪 Deutsch</option>
+          <option value="es">🇪🇸 Español</option>
+          <option value="it">🇮🇹 Italiano</option>
+          <option value="tr">🇹🇷 Türkçe</option>
+          <option value="ru">🇷🇺 Русский</option>
+          <option value="el">🇬🇷 Ελληνικά</option>
+          <option value="ar">🇸🇦 العربية</option>
+        </select>
       </div>
 
       <!-- Topics — full width row -->
@@ -1844,7 +1846,8 @@
     const context     = document.getElementById('inputContext').value.trim();
     const familyStory = document.getElementById('familyStory').value.trim();
     const useFamilyStory = document.getElementById('chkUseFamily').checked;
-    const puzzleType = document.querySelector('input[name="puzzleType"]:checked')?.value || 'standard';
+    const puzzleType = 'schweden';
+    const language = document.getElementById('selectLanguage')?.value || 'de';
     const healthProfile = document.getElementById('selectHealthProfile')?.value || 'none';
     const difficulty = document.getElementById('selectDifficulty')?.value || 'leicht';
     const wordCountRaw = parseInt(document.getElementById('selectWordCount')?.value, 10);
@@ -1859,6 +1862,7 @@
       familyStory,
       useFamilyStory,
       puzzleType,
+      language: ['de','es','it','tr','ru','el','ar'].includes(language) ? language : 'de',
       healthProfile: ['none', 'demenz', 'depression', 'schlaganfall', 'parkinson', 'sehschwaeche', 'angst'].includes(healthProfile) ? healthProfile : 'none',
       difficulty: ['sehr_leicht', 'leicht', 'mittel'].includes(difficulty) ? difficulty : 'leicht',
       wordCount,
@@ -1881,8 +1885,11 @@
       const shouldSelect = selectedTopics ? selectedTopics.has(t.label) : t.default;
       chip.classList.toggle('selected', shouldSelect);
     });
-    const pt = ['standard', 'schweden', 'gitter'].includes(s.puzzleType) ? s.puzzleType : 'standard';
-    document.querySelectorAll('input[name="puzzleType"]').forEach(r => { r.checked = r.value === pt; });
+
+    const langAllowed = new Set(['de','es','it','tr','ru','el','ar']);
+    const lang = langAllowed.has(s.language) ? s.language : 'de';
+    const selLang = document.getElementById('selectLanguage');
+    if (selLang) selLang.value = lang;
 
     const hpAllowed = new Set(['none', 'demenz', 'depression', 'schlaganfall', 'parkinson', 'sehschwaeche', 'angst']);
     const hp = hpAllowed.has(s.healthProfile) ? s.healthProfile : 'none';
@@ -2543,11 +2550,21 @@
     }
   }
 
+  const LANG_LABELS = {
+    de: { across: 'Waagerecht →', down: 'Senkrecht ↓', solution: 'Lösungswort', dir: 'ltr' },
+    es: { across: 'Horizontal →', down: 'Vertical ↓', solution: 'Palabra Clave', dir: 'ltr' },
+    it: { across: 'Orizzontale →', down: 'Verticale ↓', solution: 'Parola Chiave', dir: 'ltr' },
+    tr: { across: 'Yatay →', down: 'Dikey ↓', solution: 'Çözüm Kelimesi', dir: 'ltr' },
+    ru: { across: 'По горизонтали →', down: 'По вертикали ↓', solution: 'Ключевое слово', dir: 'ltr' },
+    el: { across: 'Οριζόντια →', down: 'Κάθετα ↓', solution: 'Λέξη-Κλειδί', dir: 'ltr' },
+    ar: { across: '← أفقي', down: '↓ عمودي', solution: 'كلمة الحل', dir: 'rtl' },
+  };
+
   function renderPuzzle(data, mountEl) {
     const { title, gridWidth, gridHeight, words } = data;
-    const puzzleType = ['standard', 'schweden', 'gitter'].includes(data.puzzleType)
-      ? data.puzzleType
-      : 'standard';
+    const puzzleType = 'schweden';
+    const lang = data.language || getSettings().language || 'de';
+    const ll = LANG_LABELS[lang] || LANG_LABELS.de;
 
     const loesCells = data.loesungswortCells || [];
     const loesOrderMap = {};
@@ -2613,22 +2630,18 @@
       </div>`
     ).join('');
 
-    const modeHint = puzzleType === 'schweden'
-      ? '<p class="puzzle-mode-hint"><strong>Schwedenstil:</strong> Knappe Hinweise nur in der Liste unten. Im Gitter wie üblich <strong>nur Nummern</strong>.</p>'
-      : puzzleType === 'gitter'
-        ? '<p class="puzzle-mode-hint"><strong>Gitter ohne Nummern:</strong> Im Gitter keine Ziffern – die Wörter finden Sie über die Kreuzungen und diese Liste.</p>'
-        : '';
+    const modeHint = '<p class="puzzle-mode-hint"><strong>Schwedenstil:</strong> Knappe Hinweise nur in der Liste unten. Im Gitter wie üblich <strong>nur Nummern</strong>.</p>';
 
     let loesUnterHtml = '';
     if (loesW) {
       let slots = '';
       for (let i = 0; i < loesW.length; i++) {
-        slots += `<div class="loeswort-slot" data-loes-i="${i}" aria-label="Lösungswort Buchstabe ${i + 1}"></div>`;
+        slots += `<div class="loeswort-slot" data-loes-i="${i}" aria-label="${escHtml(ll.solution)} ${i + 1}"></div>`;
       }
       const hintHtml = loesH ? escHtml(loesH) : escHtml(loesUniversalHint);
       loesUnterHtml = `
       <div class="loeswort-unter-gitte">
-        <div class="loeswort-leiste-head">Lösungswort</div>
+        <div class="loeswort-leiste-head">${escHtml(ll.solution)}</div>
         <div class="loeswort-slots">${slots}</div>
         <p class="loeswort-hint">${hintHtml}</p>
       </div>`;
@@ -2636,19 +2649,23 @@
 
     const cluesHtml = `
       ${modeHint}
-      <div class="clues-below">
+      <div class="clues-below${ll.dir === 'rtl' ? ' clues-rtl' : ''}">
         <div class="clues-section">
-          <div class="clues-heading">Waagerecht →</div>
+          <div class="clues-heading">${escHtml(ll.across)}</div>
           ${clueList(across)}
         </div>
         <div class="clues-section">
-          <div class="clues-heading">Senkrecht ↓</div>
+          <div class="clues-heading">${escHtml(ll.down)}</div>
           ${clueList(down)}
         </div>
       </div>`;
 
     const target = mountEl || document.getElementById('puzzleArea');
     if (!target) return;
+
+    // Apply language class for font/direction support
+    target.className = target.className.replace(/\blang-\w+\b/g, '').trim();
+    target.classList.add(`lang-${lang}`);
 
     target.innerHTML = `
       <div class="puzzle-title-bar">
@@ -2659,7 +2676,7 @@
           return n ? `Für ${escHtml(n)}` : 'Mit lieben Grüßen';
         })()}</span>
       </div>
-      <div class="crossword-layout">
+      <div class="crossword-layout${ll.dir === 'rtl' ? ' crossword-layout--rtl' : ''}">
         <div class="grid-column">${gridHtml}</div>
         ${loesUnterHtml}
         ${cluesHtml}

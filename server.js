@@ -13,14 +13,131 @@ const client = new Anthropic({
 });
 
 // ---------------------------------------------------------------------------
+// Language configuration
+// ---------------------------------------------------------------------------
+
+const LANG_CONFIG = {
+  de: {
+    name: 'Deutsch', dir: 'ltr',
+    acrossLabel: 'Waagerecht →', downLabel: 'Senkrecht ↓',
+    solutionWordLabel: 'Lösungswort',
+    charRule: '- "word": 4–9 Buchstaben, nur A–Z; Umlaute als AE, OE, UE; SS statt ß\n- "clue": ein kurzer, freundlicher Satz auf Deutsch\n- Bevorzuge Buchstaben E, N, R, S, T, A, I, O für gutes Vernetzen',
+    lwCharRule: '5–8 Buchstaben, deutsch, nur A–Z (Umlaute als AE, OE, UE, SS statt ß)',
+    lwCharRuleAfter: '4–9 Buchstaben, nur A–Z; Umlaute als AE, OE, UE; SS statt ß',
+    generateIntro: (wc) => `Erstelle genau ${wc} deutsche Wörter mit jeweils einem kurzen Hinweis (Rätselfrage) für ein Kreuzworträtsel.`,
+    lwIntro: (wc) => `Für ein Kreuzworträtsel mit etwa ${wc} Begriffen wird **zuerst** das **Lösungswort** (Heft-Stil) und ein **Hinweis** festgelegt.`,
+    scatterHint: 'Die kleinen Ziffern in den türkisen Marken unten rechts in den Kästchen (1, 2, 3 …) geben die Reihenfolge. Lesen Sie die Buchstaben nacheinander — so ergibt sich das Lösungswort.',
+    universalHint: 'Die türkisen Zahlmarken unten rechts in den weißen Kästchen (1, 2, 3 …) gehören zum Lösungswort — nicht die schwarzen Rätselnummern oben links. Tragen Sie die Buchstaben in die Kästchen unter dem Gitter ein. Je mehr Begriffe Sie lösen, desto mehr Buchstaben kennen Sie schon.',
+    modeNote: 'Schwedenstil: Knappe Hinweise nur in der Liste unten. Im Gitter wie gewohnt nur Nummern.',
+    systemLang: 'deutschsprachige',
+  },
+  es: {
+    name: 'Español', dir: 'ltr',
+    acrossLabel: 'Horizontal →', downLabel: 'Vertical ↓',
+    solutionWordLabel: 'Palabra Clave',
+    charRule: '- "word": 4–9 letras, solo A–Z sin tildes (normaliza á→A, é→E, ñ→N, etc.)\n- "clue": una frase breve y amable en español\n- Prefiere letras frecuentes: A, E, I, O, S, N, R, L',
+    lwCharRule: '5–8 letras, palabra española, solo A–Z sin tildes',
+    lwCharRuleAfter: '4–9 letras, solo A–Z sin tildes ni diacríticos',
+    generateIntro: (wc) => `Crea exactamente ${wc} palabras en español, cada una con una pista corta para un crucigrama. TODAS las palabras y pistas DEBEN estar en español.`,
+    lwIntro: (wc) => `Para un crucigrama de unos ${wc} palabras, determina primero la PALABRA CLAVE y una pista. TODA la respuesta debe estar en español.`,
+    scatterHint: 'Los pequeños números en las casillas indican el orden. Lee las letras en ese orden para encontrar la palabra clave.',
+    universalHint: 'Los números en turquesa en las casillas (1, 2, 3 …) pertenecen a la palabra clave. Escribe esas letras en las casillas de abajo. Cuantas más palabras resuelvas, más letras conocerás.',
+    modeNote: 'Estilo sueco: Pistas breves solo en la lista inferior. Solo números en el tablero.',
+    systemLang: 'en español',
+  },
+  it: {
+    name: 'Italiano', dir: 'ltr',
+    acrossLabel: 'Orizzontale →', downLabel: 'Verticale ↓',
+    solutionWordLabel: 'Parola Chiave',
+    charRule: '- "word": 4–9 lettere, solo A–Z senza accenti (normalizza à→A, è→E, ecc.)\n- "clue": una breve frase in italiano\n- Preferisci lettere frequenti: A, E, I, O, N, R, S, L',
+    lwCharRule: '5–8 lettere, parola italiana, solo A–Z senza accenti',
+    lwCharRuleAfter: '4–9 lettere, solo A–Z senza accenti',
+    generateIntro: (wc) => `Crea esattamente ${wc} parole in italiano, ognuna con un breve indizio per un cruciverba. TUTTE le parole e gli indizi DEVONO essere in italiano.`,
+    lwIntro: (wc) => `Per un cruciverba di circa ${wc} parole, determina prima la PAROLA CHIAVE e un indizio. TUTTA la risposta deve essere in italiano.`,
+    scatterHint: 'I piccoli numeri nelle caselle indicano l\'ordine. Leggi le lettere in quell\'ordine per trovare la parola chiave.',
+    universalHint: 'I numeri in turchese nelle caselle (1, 2, 3 …) appartengono alla parola chiave. Scrivi quelle lettere nelle caselle in basso. Più parole risolvi, più lettere conoscerai.',
+    modeNote: 'Stile svedese: Suggerimenti brevi solo nell\'elenco in basso. Solo numeri nel tabellone.',
+    systemLang: 'in italiano',
+  },
+  tr: {
+    name: 'Türkçe', dir: 'ltr',
+    acrossLabel: 'Yatay →', downLabel: 'Dikey ↓',
+    solutionWordLabel: 'Çözüm Kelimesi',
+    charRule: '- "word": 4–9 harf, büyük Türkçe harfler (Ç, Ğ, İ, Ö, Ş, Ü dahil)\n- "clue": kısa, nazik bir Türkçe cümle\n- Sık kullanılan harfleri tercih et: A, E, İ, K, L, N, R, S',
+    lwCharRule: '5–8 harf, Türkçe kelime, büyük harfler (Ç, Ğ, İ, Ö, Ş, Ü dahil)',
+    lwCharRuleAfter: '4–9 harf, büyük Türkçe harfler',
+    generateIntro: (wc) => `Tam olarak ${wc} Türkçe kelime oluştur, her biri bir bulmaca için kısa bir ipucu ile. TÜM kelimeler ve ipuçları Türkçe OLMALIDIR.`,
+    lwIntro: (wc) => `Yaklaşık ${wc} kelimeli bir bulmaca için önce ÇÖZÜM KELİMESİ ve bir ipucu belirle. Tüm yanıt Türkçe olmalı.`,
+    scatterHint: 'Kutucuklardaki küçük rakamlar sırayı gösterir. Harfleri o sırayla okuyarak çözüm kelimesini bulun.',
+    universalHint: 'Kutucuklardaki turkuaz rakamlar (1, 2, 3 …) çözüm kelimesine aittir. O harfleri aşağıdaki kutucuklara yazın. Ne kadar çok kelime çözerseniz o kadar çok harf bilirsiniz.',
+    modeNote: 'İsveç stili: Kısa ipuçları yalnızca aşağıdaki listede. Tabloda yalnızca numaralar.',
+    systemLang: 'Türkçe',
+  },
+  ru: {
+    name: 'Русский', dir: 'ltr',
+    acrossLabel: 'По горизонтали →', downLabel: 'По вертикали ↓',
+    solutionWordLabel: 'Ключевое слово',
+    charRule: '- "word": 4–9 букв, только кириллица ЗАГЛАВНЫМИ (А–Я, Ё)\n- "clue": короткое дружелюбное предложение на русском языке\n- Предпочитай частые буквы: А, Е, И, Н, О, Р, С, Т',
+    lwCharRule: '5–8 букв, русское слово, только кириллица заглавными (А–Я, Ё)',
+    lwCharRuleAfter: '4–9 букв, только кириллица заглавными буквами',
+    generateIntro: (wc) => `Создай ровно ${wc} русских слов, каждое с коротким подсказом для кроссворда. ВСЕ слова и подсказы ДОЛЖНЫ быть на русском языке (кириллица).`,
+    lwIntro: (wc) => `Для кроссворда примерно из ${wc} слов сначала определи КЛЮЧЕВОЕ СЛОВО и подсказ. Весь ответ должен быть на русском языке.`,
+    scatterHint: 'Маленькие цифры в клетках указывают порядок. Читайте буквы в этом порядке, чтобы найти ключевое слово.',
+    universalHint: 'Бирюзовые цифры в клетках (1, 2, 3 …) относятся к ключевому слову. Впишите эти буквы в клетки ниже. Чем больше слов вы разгадаете, тем больше букв узнаете.',
+    modeNote: 'Шведский стиль: Краткие подсказки только в списке ниже. В сетке только цифры.',
+    systemLang: 'на русском языке',
+  },
+  el: {
+    name: 'Ελληνικά', dir: 'ltr',
+    acrossLabel: 'Οριζόντια →', downLabel: 'Κάθετα ↓',
+    solutionWordLabel: 'Λέξη-Κλειδί',
+    charRule: '- "word": 4–9 γράμματα, μόνο ελληνικά ΚΕΦΑΛΑΙΑ χωρίς τόνους\n- "clue": μια σύντομη φιλική πρόταση στα ελληνικά\n- Προτίμησε συχνά γράμματα: Α, Ε, Η, Ι, Κ, Ν, Ο, Σ, Τ',
+    lwCharRule: '5–8 γράμματα, ελληνική λέξη, κεφαλαία χωρίς τόνους',
+    lwCharRuleAfter: '4–9 γράμματα, μόνο ελληνικά κεφαλαία χωρίς τόνους',
+    generateIntro: (wc) => `Δημιούργησε ακριβώς ${wc} ελληνικές λέξεις, η καθεμία με μια σύντομη υπόδειξη για σταυρόλεξο. ΟΛΕΣ οι λέξεις και οι υποδείξεις ΠΡΕΠΕΙ να είναι στα ελληνικά.`,
+    lwIntro: (wc) => `Για ένα σταυρόλεξο με περίπου ${wc} λέξεις, καθόρισε πρώτα τη ΛΕΞΗ-ΚΛΕΙΔΙ και μια υπόδειξη. Η απάντηση πρέπει να είναι στα ελληνικά.`,
+    scatterHint: 'Τα μικρά νούμερα στα κελιά δείχνουν τη σειρά. Διαβάστε τα γράμματα με αυτή τη σειρά για να βρείτε τη λέξη-κλειδί.',
+    universalHint: 'Τα τιρκουάζ νούμερα στα κελιά (1, 2, 3 …) ανήκουν στη λέξη-κλειδί. Γράψτε τα γράμματα στα κελιά παρακάτω. Όσο περισσότερες λέξεις λύνετε, τόσο περισσότερα γράμματα γνωρίζετε.',
+    modeNote: 'Σουηδικό στυλ: Σύντομες ενδείξεις μόνο στη λίστα παρακάτω. Στο πλέγμα μόνο αριθμοί.',
+    systemLang: 'στα ελληνικά',
+  },
+  ar: {
+    name: 'العربية', dir: 'rtl',
+    acrossLabel: '← أفقي', downLabel: '↓ عمودي',
+    solutionWordLabel: 'كلمة الحل',
+    charRule: '- "word": 4–9 حروف، حروف عربية فقط بدون تشكيل (حركات)، اكتبها باللغة العربية\n- "clue": جملة قصيرة وودية باللغة العربية\n- فضل الحروف الشائعة: ا، ل، م، ن، و، ي، ه، ع',
+    lwCharRule: '5–8 حروف، كلمة عربية بدون تشكيل',
+    lwCharRuleAfter: '4–9 حروف، حروف عربية فقط بدون تشكيل',
+    generateIntro: (wc) => `أنشئ بالضبط ${wc} كلمة عربية، كل منها مع تلميح قصير لكلمة متقاطعة. يجب أن تكون جميع الكلمات والتلميحات باللغة العربية بدون تشكيل.`,
+    lwIntro: (wc) => `لكلمة متقاطعة من حوالي ${wc} كلمة، حدد أولاً كلمة الحل وتلميحاً لها. يجب أن تكون جميع الإجابات باللغة العربية.`,
+    scatterHint: 'الأرقام الصغيرة في الخلايا تشير إلى الترتيب. اقرأ الحروف بهذا الترتيب للحصول على كلمة الحل.',
+    universalHint: 'الأرقام الفيروزية في الخلايا (١، ٢، ٣ …) تنتمي إلى كلمة الحل. اكتب تلك الحروف في الخلايا أدناه.',
+    modeNote: 'الأسلوب السويدي: تلميحات مختصرة في القائمة أدناه فقط. في الشبكة أرقام فقط.',
+    systemLang: 'باللغة العربية',
+  },
+};
+
+function getLang(settings) {
+  const lang = String(settings.language || 'de');
+  return LANG_CONFIG[lang] ? lang : 'de';
+}
+
+function getLangConfig(settings) {
+  return LANG_CONFIG[getLang(settings)] || LANG_CONFIG.de;
+}
+
+// ---------------------------------------------------------------------------
 // Anthropic: only ask for words + clues, no grid layout
 // ---------------------------------------------------------------------------
 
-const SYSTEM_PROMPT = `Du bist ein einfühlsamer Redakteur für deutschsprachige Kreuzworträtsel für Seniorinnen und Senioren.
-Du gibst AUSSCHLIESSLICH valides JSON zurück – kein weiterer Text, keine Markdown-Codeblöcke.
-Wenn persönliche Familien- oder Lebensinformationen geliefert werden, sind sie verbindlich und dürfen nicht ignoriert werden.
-Wenn ein Gesundheits- oder Unterstützungskontext (z. B. Demenz, Depression) angegeben ist, ist dieser verbindlich – respektvoll, nicht stigmatisierend formulieren.
-Die gewählte Schwierigkeit (sehr leicht / leicht / mittel) ist verbindlich für Wort- und Hinweiswahl.`;
+function getSystemPrompt(lang = 'de') {
+  const cfg = LANG_CONFIG[lang] || LANG_CONFIG.de;
+  return `You are a compassionate crossword puzzle editor creating puzzles ${cfg.systemLang} for elderly people (seniors).
+You return EXCLUSIVELY valid JSON – no additional text, no Markdown code blocks.
+When personal family or life information is provided, it is binding and must not be ignored.
+When a health or support context is given, it is binding – formulate respectfully and without stigma.
+The chosen difficulty level is binding for word and clue selection.`;
+}
 
 function healthProfileBlock(code) {
   const c = String(code || 'none');
@@ -115,11 +232,11 @@ RÄTSELART „Standard-Kreuzworträtsel“:
 
 // Build prompt from user settings (general by default; personal story overrides when enabled)
 function buildUserPrompt(settings = {}) {
+  const lang = getLang(settings);
+  const langCfg = LANG_CONFIG[lang];
   const healthProfile = normalizeHealthProfile(settings.healthProfile);
   const difficulty    = normalizeDifficulty(settings.difficulty);
-  const puzzleType = ['standard', 'schweden', 'gitter'].includes(settings.puzzleType)
-    ? settings.puzzleType
-    : 'standard';
+  const puzzleType = settings.puzzleType === 'schweden' ? 'schweden' : 'schweden';
   const name = (settings.name || '').trim();
   const nameLine = name
     ? `Optionaler Vorname für warme, sparsame Ansprache in einzelnen Hinweisen: ${name}`
@@ -139,7 +256,7 @@ function buildUserPrompt(settings = {}) {
   const topicBlock = topics.map(t => `• ${t}`).join('\n');
 
   const plannedLw = settings.plannedLoesungswort
-    ? normalise(settings.plannedLoesungswort)
+    ? normalise(settings.plannedLoesungswort, lang)
     : '';
   const loesungBlock = plannedLw
     ? `
@@ -214,20 +331,18 @@ ${wordList}
     }
   }
 
-  return `Erstelle genau ${wordCount} deutsche Wörter mit jeweils einem kurzen Hinweis (Rätselfrage) für ein Kreuzworträtsel.
+  return `${langCfg.generateIntro(wordCount)}
 
 ${difficultyBlock(difficulty)}${healthProfileBlock(healthProfile)}
 ${audienceLine} Ton: warm, würdevoll, positiv, sehr klar. Keine ironischen Texte, keine unnötig schweren Begriffe.
 
 ${nameLine}
-${name ? `Als JSON-"title" z. B. ein herzlicher Titel in Großbuchstaben, z. B. „${name.toUpperCase()}S FAMILIENRÄTSEL“ oder „EIN RÄTSEL FÜR ${name.toUpperCase()}“ — oder eine eigene passende Kurzform.` : 'Als JSON-"title" einen kurzen, herzlichen Titel (gern in Großbuchstaben, Magazinstil).'}
+${name ? `Als JSON-"title": herzlicher Titel (Versalien) in ${langCfg.name}.` : `Als JSON-"title": kurzer herzlicher Titel (Versalien, Magazinstil) in ${langCfg.name}.`}
 ${loesungBlock}${wordHistoryBlock}${personalBlock}${generalBlock}
 ${puzzleTypePromptExtra(puzzleType)}
 
 Technische Regeln:
-- Pro Eintrag: "word" (4–9 Buchstaben, ideal für Kreuzungen), nur A–Z; Umlaute als AE, OE, UE; SS statt ß
-- "clue": ein kurzer, freundlicher deutscher Satz
-- Bevorzugen Sie Buchstaben E, N, R, S, T, A, I, O für gutes Vernetzen
+${langCfg.charRule}
 
 Antwortformat (NUR dieses JSON, exakt ${wordCount} Objekte in "words"):
 {
@@ -241,12 +356,39 @@ ${plannedLw ? 'Liefern Sie **kein** Lösungswort-Feld in JSON — es ist oben be
 }
 
 // ---------------------------------------------------------------------------
-// Word normaliser
+// Word normaliser (language-aware)
 // ---------------------------------------------------------------------------
 
-function normalise(word) {
-  return String(word)
-    .toUpperCase()
+function normalise(word, lang = 'de') {
+  if (lang === 'es' || lang === 'it') {
+    return String(word).toUpperCase()
+      .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+      .replace(/[^A-Z]/g, '');
+  }
+  if (lang === 'tr') {
+    return String(word).toLocaleUpperCase('tr')
+      .replace(/\u0131/g, 'I')   // dotless ı → I
+      .replace(/İ/g, 'I')        // dotted İ → I (uniform)
+      .replace(/[^A-ZÇĞÖŞÜ]/g, '');
+  }
+  if (lang === 'ru') {
+    return String(word).toUpperCase().replace(/[^А-ЯЁ]/g, '');
+  }
+  if (lang === 'el') {
+    return String(word).toUpperCase()
+      .normalize('NFD').replace(/[\u0300-\u036f\u0384\u0385]/g, '')
+      .replace(/[^ΑΒΓΔΕΖΗΘΙΚΛΜΝΞΟΠΡΣΤΥΦΧΨΩ]/g, '');
+  }
+  if (lang === 'ar') {
+    return String(word)
+      .replace(/[\u064B-\u065F\u0670\u0671]/g, '')  // strip harakat/wasla
+      .replace(/[آأإٱ]/g, 'ا')   // normalize alef variants
+      .replace(/ة/g, 'ت')         // ta marbuta → ta
+      .replace(/ى/g, 'ي')         // alef maqsura → ya
+      .replace(/[^\u0621-\u063A\u0641-\u064A]/g, ''); // keep basic Arabic
+  }
+  // de (default)
+  return String(word).toUpperCase()
     .replace(/Ä/g, 'AE').replace(/Ö/g, 'OE').replace(/Ü/g, 'UE')
     .replace(/ß/g, 'SS').replace(/[^A-Z]/g, '');
 }
@@ -256,7 +398,10 @@ function stripJson(text) {
 }
 
 /** Phase 0: Lösungswort + Hinweis vor der Wortliste (damit Buchstaben gezielt in Begriffe einbaubar sind). */
+/** Phase 0: Lösungswort + Hinweis vor der Wortliste (damit Buchstaben gezielt in Begriffe einbaubar sind). */
 async function fetchLoesungswortPlan(settings, wordCount) {
+  const lang = getLang(settings);
+  const langCfg = LANG_CONFIG[lang];
   const name = (settings.name || '').trim();
   const topics = Array.isArray(settings.topics) && settings.topics.length
     ? settings.topics
@@ -282,11 +427,13 @@ async function fetchLoesungswortPlan(settings, wordCount) {
       .slice(0, 40)
       .map(([w]) => w);
     if (usedLw.length > 0) {
-      avoidBlock = `\nBereits verwendete Lösungswörter (NICHT nochmals wählen): ${usedLw.join(', ')}\n`;
+      avoidBlock = `
+Bereits verwendete Lösungswörter (NICHT nochmals wählen): ${usedLw.join(', ')}
+`;
     }
   }
 
-  const userContent = `Für ein Kreuzworträtsel mit etwa ${wordCount} Begriffen wird **zuerst** das **Lösungswort** (Heft-Stil) und ein **Hinweis** festgelegt.
+  const userContent = `${langCfg.lwIntro(wordCount)}
 
 ${ctx}
 ${avoidBlock}
@@ -294,21 +441,21 @@ Antworten Sie mit **NUR** diesem JSON:
 {"loesungswort":"WORT","loesungswort_hinweis":"Kurzer Satz ohne das Wort wörtlich zu nennen"}
 
 Regeln:
-- loesungswort: **5–8** Buchstaben, deutsch, nur A–Z (Umlaute als AE, OE, UE, SS)
-- **Abwechslungsreich und überraschend** — NICHT immer das Naheliegendste (z. B. nicht schon wieder FAMILIE, LIEBE, HEIMAT, GARTEN wenn diese schon oft genutzt wurden). Denke an: Jahreszeiten, Berufe, Orte, Natur, Essen, Musik, Farben, Tiere, Feste, Alltagsgegenstände — je nach Kontext.
+- loesungswort: ${langCfg.lwCharRule}
+- **Abwechslungsreich und überraschend** — wähle ein frisches, unerwartetes Wort aus dem Themenkontext.
 - emotional passend zum Kontext, aber frisch und unerwartet
-- loesungswort_hinweis: ein liebevoller Satz, ohne das Wort direkt zu nennen`;
+- loesungswort_hinweis: ein liebevoller Satz in ${langCfg.name}, ohne das Wort direkt zu nennen`;
 
   for (let attempt = 0; attempt < 2; attempt++) {
     try {
       const msg = await client.messages.create({
         model: 'claude-opus-4-5',
         max_tokens: 400,
-        system: SYSTEM_PROMPT,
+        system: getSystemPrompt(lang),
         messages: [{ role: 'user', content: userContent }],
       });
       const data = JSON.parse(stripJson(msg.content[0].text));
-      const lw = data.loesungswort != null ? normalise(data.loesungswort) : '';
+      const lw = data.loesungswort != null ? normalise(data.loesungswort, lang) : '';
       const hint = String(data.loesungswort_hinweis || data.loesungswortHinweis || '').trim();
       if (lw.length >= 4 && lw.length <= 10 && hint) {
         return { loesungswort: lw, loesungswortHinweis: hint };
@@ -320,8 +467,8 @@ Regeln:
   return null;
 }
 
-function lettersCoveredByWords(wordObjects, lw) {
-  const lwNorm = normalise(lw);
+function lettersCoveredByWords(wordObjects, lw, lang = 'de') {
+  const lwNorm = normalise(lw, lang);
   if (!lwNorm) return false;
   const need = {};
   for (const ch of lwNorm) need[ch] = (need[ch] || 0) + 1;
@@ -381,8 +528,8 @@ function manhattanPairSum(points) {
  * Wählt pro Lösungswort-Buchstaben eine Gitterzelle (aus den gelegten Wörtern), eindeutige Zellen,
  * bevorzugt **Streuung**; verbietet „alles in einer durchgehenden Linie“.
  */
-function pickScatteredLoesungswortQuelle(placedWords, lwRaw) {
-  const lw = normalise(lwRaw);
+function pickScatteredLoesungswortQuelle(placedWords, lwRaw, lang = 'de') {
+  const lw = normalise(lwRaw, lang);
   if (!lw || !placedWords.length) return null;
 
   const byK = [];
@@ -458,9 +605,8 @@ function pickScatteredLoesungswortQuelle(placedWords, lwRaw) {
 }
 
 function buildLoesungswortQuelleOnlyPrompt(placedWords, fixedLoesungswort, title, settings = {}) {
-  const puzzleType = ['standard', 'schweden', 'gitter'].includes(settings.puzzleType)
-    ? settings.puzzleType
-    : 'standard';
+  const lang = getLang(settings);
+  const langCfg = LANG_CONFIG[lang];
   const rows = [...placedWords]
     .sort((a, b) =>
       a.number !== b.number ? a.number - b.number : String(a.direction).localeCompare(String(b.direction)))
@@ -471,12 +617,12 @@ function buildLoesungswortQuelleOnlyPrompt(placedWords, fixedLoesungswort, title
       clue: String(w.clue || '').slice(0, 160),
     }));
 
-  const lw = normalise(fixedLoesungswort);
+  const lw = normalise(fixedLoesungswort, lang);
   return `Das Kreuzworträtsel ist gelegt. Titel: ${title || 'Rätsel'}
 
-${puzzleTypePromptExtra(puzzleType)}
+${puzzleTypePromptExtra('schweden')}
 
-**Lösungswort ist fest:** „${lw}“ (${lw.length} Buchstaben in dieser exakten Reihenfolge).
+**Lösungswort ist fest:** „${lw}" (${lw.length} Buchstaben in dieser exakten Reihenfolge).
 
 === EINTRÄGE (nur diese "word"-Strings verwenden) ===
 ${JSON.stringify(rows, null, 2)}
@@ -492,6 +638,7 @@ Antwort: **NUR** JSON dieser Form:
 }
 
 async function fetchLoesungswortQuelleOnlyAfterPlacement(placedWords, fixedLw, title, settings) {
+  const lang = getLang(settings);
   if (!placedWords.length || !fixedLw) return null;
   const userContent = buildLoesungswortQuelleOnlyPrompt(placedWords, fixedLw, title, settings);
   for (let attempt = 0; attempt < 2; attempt++) {
@@ -499,12 +646,12 @@ async function fetchLoesungswortQuelleOnlyAfterPlacement(placedWords, fixedLw, t
       const msg = await client.messages.create({
         model: 'claude-opus-4-5',
         max_tokens: 2000,
-        system: SYSTEM_PROMPT,
+        system: getSystemPrompt(lang),
         messages: [{ role: 'user', content: userContent }],
       });
       const data = JSON.parse(stripJson(msg.content[0].text));
       const quelle = data.loesungswort_quelle || data.loesungswortQuelle || null;
-      const lw = normalise(fixedLw);
+      const lw = normalise(fixedLw, lang);
       if (Array.isArray(quelle) && quelle.length === lw.length) {
         return { quelle };
       }
@@ -516,9 +663,8 @@ async function fetchLoesungswortQuelleOnlyAfterPlacement(placedWords, fixedLw, t
 }
 
 function buildLoesungswortAfterPlacementPrompt(placedWords, title, settings = {}) {
-  const puzzleType = ['standard', 'schweden', 'gitter'].includes(settings.puzzleType)
-    ? settings.puzzleType
-    : 'standard';
+  const lang = getLang(settings);
+  const langCfg = LANG_CONFIG[lang];
   const rows = [...placedWords]
     .sort((a, b) =>
       a.number !== b.number ? a.number - b.number : String(a.direction).localeCompare(String(b.direction)))
@@ -530,41 +676,42 @@ function buildLoesungswortAfterPlacementPrompt(placedWords, title, settings = {}
     }));
 
   const name = (settings.name || '').trim();
-  const dedication = name ? `Beziehen Sie den Vornamen „${name}“ ein, wenn es zum Thema passt.` : '';
+  const dedication = name ? `Beziehen Sie den Vornamen „${name}" ein, wenn es zum Thema passt.` : '';
 
   return `Das Kreuzworträtsel ist **fertig gelegt**. Sie kennen **exakt** alle Lösungswörter, **Rätselnummer**, **Richtung** (across = waagerecht, down = senkrecht) und **Hinweis**.
 
 Titel: ${title || 'Rätsel'}
 ${dedication}
 
-${puzzleTypePromptExtra(puzzleType)}
+${puzzleTypePromptExtra('schweden')}
 
 === ALLE EINTRÄGE (nur diese "word"-Strings in "loesungswort_quelle" verwenden) ===
 ${JSON.stringify(rows, null, 2)}
 === Ende Liste ===
 
-Erzeugen Sie ein **Lösungswort** im Rätselheft-Stil: thematisch passend, **nicht** zwingend ein 1:1-Kopie eines Listenworts. Die Spielerinnen lesen die Buchstaben später aus **gekennzeichneten** Gitterfeldern — Sie ordnen jedem Buchstaben des Lösungsworts **einen** Buchstaben **eines** der Listeneinträge zu.
+Erzeugen Sie ein **Lösungswort** im Rätselheft-Stil in **${langCfg.name}**: thematisch passend. Die Spielerinnen lesen die Buchstaben später aus **gekennzeichneten** Gitterfeldern — ordnen Sie jedem Buchstaben des Lösungsworts **einen** Buchstaben **eines** der Listeneinträge zu.
 
 Antworten Sie mit **NUR** diesem JSON (kein Markdown, keine Erklärung):
 {
   "loesungswort": "BEISPIEL",
-  "loesungswort_hinweis": "Ein kurzer, liebevoller Satz – ohne das Lösungswort wörtlich zu nennen.",
+  "loesungswort_hinweis": "Ein kurzer liebevoller Satz in ${langCfg.name} – ohne das Lösungswort wörtlich zu nennen.",
   "loesungswort_quelle": [
     { "word": "EINTAG", "buchstabe_index": 0 }
   ]
 }
 
 Regeln:
-- "loesungswort": 4–9 Buchstaben, nur A–Z; Umlaute als AE, OE, UE; SS statt ß
+- "loesungswort": ${langCfg.lwCharRuleAfter}
 - "loesungswort_quelle": genau so viele Objekte wie "loesungswort" Buchstaben
 - Jedes "word" muss **identisch** zu einem "word" in der Liste oben sein (gleiche Normalisierung)
 - "buchstabe_index": **0** = erster Buchstabe dieses Wortes, **1** = zweiter, …; muss zum jeweiligen Buchstaben in "loesungswort" passen
 - **Keine Zelle doppelt**: dieselbe physische Gitterposition darf nicht zweimal vorkommen
 - Bevorzugen Sie Buchstaben an **Kreuzungen**
-- "loesungswort_hinweis": emotional passend, Lösungswort nicht wörtlich nennen`;
+- "loesungswort_hinweis": emotional passend in ${langCfg.name}, Lösungswort nicht wörtlich nennen`;
 }
 
 async function fetchLoesungswortAfterPlacement(placedWords, title, settings) {
+  const lang = getLang(settings);
   if (!placedWords || !placedWords.length) return null;
   const userContent = buildLoesungswortAfterPlacementPrompt(placedWords, title, settings);
   for (let attempt = 0; attempt < 2; attempt++) {
@@ -572,11 +719,11 @@ async function fetchLoesungswortAfterPlacement(placedWords, title, settings) {
       const msg = await client.messages.create({
         model: 'claude-opus-4-5',
         max_tokens: 1200,
-        system: SYSTEM_PROMPT,
+        system: getSystemPrompt(lang),
         messages: [{ role: 'user', content: userContent }],
       });
       const data = JSON.parse(stripJson(msg.content[0].text));
-      const lw = data.loesungswort != null ? normalise(data.loesungswort) : '';
+      const lw = data.loesungswort != null ? normalise(data.loesungswort, lang) : '';
       const hint = String(data.loesungswort_hinweis || data.loesungswortHinweis || '').trim();
       const quelle = data.loesungswort_quelle || data.loesungswortQuelle || null;
       if (lw.length >= 4 && lw.length <= 12 && Array.isArray(quelle) && quelle.length === lw.length) {
@@ -588,7 +735,6 @@ async function fetchLoesungswortAfterPlacement(placedWords, title, settings) {
   }
   return null;
 }
-
 // ---------------------------------------------------------------------------
 // Crossword placement — letter-anchor engine, maximum density
 // ---------------------------------------------------------------------------
@@ -961,10 +1107,10 @@ function resolveCharIndexInWord(entry, idxRaw, expectedChar) {
   return -1;
 }
 
-function normaliseLetterSources(raw) {
+function normaliseLetterSources(raw, lang = 'de') {
   if (!Array.isArray(raw)) return null;
   return raw.map(item => ({
-    word: normalise(item.word || item.wort || ''),
+    word: normalise(item.word || item.wort || '', lang),
     buchstabe_index: item.buchstabe_index ?? item.index ?? item.i ?? item.char_index,
   }));
 }
@@ -972,13 +1118,13 @@ function normaliseLetterSources(raw) {
 /**
  * Lösungswort: Buchstaben aus gewählten Gitterfeldern (Heft-Stil), sonst Fallback: ein volles Wort.
  */
-function buildLoesungswortMeta(placedWords, requestedWord, requestedHint, letterSourcesRaw) {
-  const lw = normalise(requestedWord || '');
+function buildLoesungswortMeta(placedWords, requestedWord, requestedHint, letterSourcesRaw, lang = 'de') {
+  const langCfg = LANG_CONFIG[lang] || LANG_CONFIG.de;
+  const lw = normalise(requestedWord || '', lang);
   let hint = String(requestedHint || '').trim();
-  const letterSources = normaliseLetterSources(letterSourcesRaw);
+  const letterSources = normaliseLetterSources(letterSourcesRaw, lang);
 
-  const scatterHintDefault =
-    'Die kleinen Ziffern in den türkisen Marken unten rechts in den Kästchen (1, 2, 3 …) geben die Reihenfolge. Lesen Sie die Buchstaben nacheinander — so ergibt sich das Lösungswort.';
+  const scatterHintDefault = langCfg.scatterHint;
 
   if (letterSources && letterSources.length === lw.length && lw.length > 0 && placedWords.length) {
     const cells = [];
@@ -1011,7 +1157,7 @@ function buildLoesungswortMeta(placedWords, requestedWord, requestedHint, letter
       }
     }
     if (ok && lw.length >= 4 && isSingleContiguousStraightLine(cells.map(({ row, col }) => ({ r: row, c: col })))) {
-      const scattered = pickScatteredLoesungswortQuelle(placedWords, lw);
+      const scattered = pickScatteredLoesungswortQuelle(placedWords, lw, lang);
       if (scattered) {
         cells.length = 0;
         for (let k = 0; k < lw.length; k++) {
@@ -1089,9 +1235,9 @@ function buildLoesungswortMeta(placedWords, requestedWord, requestedHint, letter
 app.post('/api/generate', async (req, res) => {
   try {
     const settings = req.body.settings || {};
-    const puzzleType = ['standard', 'schweden', 'gitter'].includes(settings.puzzleType)
-      ? settings.puzzleType
-      : 'standard';
+    const lang = getLang(settings);
+    const langCfg = LANG_CONFIG[lang];
+    const puzzleType = 'schweden';
     const wcRaw = parseInt(settings.wordCount, 10);
     const wordCount = [16, 20, 24, 28, 32].includes(wcRaw) ? wcRaw : 24;
 
@@ -1106,7 +1252,7 @@ app.post('/api/generate', async (req, res) => {
       plannedLoesungswort: plannedLw,
     });
     let wordObjects = null;
-    let title = 'Kreuzworträtsel';
+    let title = langCfg.solutionWordLabel || 'Kreuzworträtsel';
 
     const maxTokens = Math.min(2800, 1180 + wordCount * 30);
     const minAcceptable = Math.floor(wordCount * 0.75);
@@ -1115,7 +1261,7 @@ app.post('/api/generate', async (req, res) => {
       const msg = await client.messages.create({
         model: 'claude-opus-4-5',
         max_tokens: maxTokens,
-        system: SYSTEM_PROMPT,
+        system: getSystemPrompt(lang),
         messages: [{ role: 'user', content: userPrompt }],
       });
 
@@ -1126,11 +1272,11 @@ app.post('/api/generate', async (req, res) => {
         title = data.title || title;
 
         wordObjects = (data.words || [])
-          .map(w => ({ word: normalise(w.word), clue: String(w.clue || '') }))
+          .map(w => ({ word: normalise(w.word, lang), clue: String(w.clue || '') }))
           .filter(w => w.word.length >= 4 && w.word.length <= 10 && w.clue);
 
         if (wordObjects.length >= minAcceptable) {
-          if (!plannedLw || lettersCoveredByWords(wordObjects, plannedLw)) break;
+          if (!plannedLw || lettersCoveredByWords(wordObjects, plannedLw, lang)) break;
         }
       } catch (e) {
         console.warn('JSON parse error, retrying:', e.message, raw.slice(0, 100));
@@ -1141,7 +1287,7 @@ app.post('/api/generate', async (req, res) => {
       return res.status(500).json({ error: 'Zu wenige Wörter von Claude erhalten. Bitte erneut versuchen.' });
     }
 
-    const useLoesPlan = !!(plannedLw && lettersCoveredByWords(wordObjects, plannedLw));
+    const useLoesPlan = !!(plannedLw && lettersCoveredByWords(wordObjects, plannedLw, lang));
     if (plannedLw && !useLoesPlan) {
       console.warn('Geplantes Lösungswort nicht durch Buchstaben in Wortliste abgedeckt — nutze Fallback ohne Vorplan.');
     }
@@ -1164,7 +1310,7 @@ app.post('/api/generate', async (req, res) => {
 
     let lwMeta;
     if (useLoesPlan) {
-      let quelle = pickScatteredLoesungswortQuelle(result.words, plannedLw);
+      let quelle = pickScatteredLoesungswortQuelle(result.words, plannedLw, lang);
       if (!quelle) {
         const qOnly = await fetchLoesungswortQuelleOnlyAfterPlacement(
           result.words,
@@ -1178,7 +1324,8 @@ app.post('/api/generate', async (req, res) => {
         result.words,
         plannedLw,
         plannedHint,
-        quelle
+        quelle,
+        lang
       );
     } else {
       const lwAi = await fetchLoesungswortAfterPlacement(result.words, title, {
@@ -1189,11 +1336,12 @@ app.post('/api/generate', async (req, res) => {
         result.words,
         lwAi ? lwAi.loesungswort : '',
         lwAi ? lwAi.hint : '',
-        lwAi ? lwAi.quelle : null
+        lwAi ? lwAi.quelle : null,
+        lang
       );
     }
 
-    res.json({ title, puzzleType, ...result, ...lwMeta });
+    res.json({ title, puzzleType, language: lang, ...result, ...lwMeta });
   } catch (err) {
     console.error('Fehler:', err);
     res.status(500).json({ error: err.message });
@@ -1206,6 +1354,8 @@ app.post('/api/generate', async (req, res) => {
 
 function generatePuzzleHTML(puzzleData, showSolution = false, omaName = '', issueNo = null) {
   const { title, gridWidth, gridHeight, words } = puzzleData;
+  const lang = puzzleData.language || 'de';
+  const langCfg = LANG_CONFIG[lang] || LANG_CONFIG.de;
   const nWords = words.length;
   const loesW = puzzleData.loesungswort || '';
   const loesH = puzzleData.loesungswortHinweis || '';
@@ -1216,13 +1366,11 @@ function generatePuzzleHTML(puzzleData, showSolution = false, omaName = '', issu
     loesOrderMap[`${cell.row},${cell.col}`] = ord;
   });
 
-  const puzzleType = ['standard', 'schweden', 'gitter'].includes(puzzleData.puzzleType)
-    ? puzzleData.puzzleType
-    : 'standard';
+  const puzzleType = 'schweden';
 
   const esc = s => String(s)
     .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
-  const safeTitle = esc(title || 'Kreuzworträtsel');
+  const safeTitle = esc(title || langCfg.solutionWordLabel || 'Kreuzworträtsel');
   const safeName = esc((omaName || '').trim());
   const dedicLine = safeName ? `Für ${safeName}` : 'Mit lieben Grüßen';
   const footerPlay = showSolution
@@ -1281,11 +1429,7 @@ function generatePuzzleHTML(puzzleData, showSolution = false, omaName = '', issu
   const across = words.filter(w => w.direction === 'across').sort((a, b) => a.number - b.number);
   const down   = words.filter(w => w.direction === 'down').sort((a, b) => a.number - b.number);
 
-  const modeNote = puzzleType === 'schweden'
-    ? '<p class="mode-note"><strong>Schwedenstil:</strong> Kompakte Hinweise nur in der Liste unten. Im Gitter wie gewohnt <strong>nur Nummern</strong>.</p>'
-    : puzzleType === 'gitter'
-      ? '<p class="mode-note"><strong>Gitter ohne Nummern:</strong> Im Gitter sind keine Ziffern – die Zuordnung ergibt sich aus den Kreuzungen und der Liste unten.</p>'
-      : '';
+  const modeNote = `<p class="mode-note">${esc(langCfg.modeNote)}</p>`;
 
   const clueList = arr => arr.map(w =>
     `<div class="clue"><span class="cn">${w.number}</span><span class="ct">${w.clue.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')}</span></div>`
@@ -1293,8 +1437,7 @@ function generatePuzzleHTML(puzzleData, showSolution = false, omaName = '', issu
 
   let loeswortBundleHtml = '';
   if (loesW) {
-    const loesUniversalHint =
-      'Die türkisen Zahlmarken unten rechts in den Kästchen (1, 2, 3 …) gehören zum Lösungswort — nicht die schwarzen Rätselnummern oben links. Tragen Sie die Buchstaben in die Kästchen unter dem Gitter ein. Je mehr Begriffe Sie lösen, desto mehr Buchstaben kennen Sie schon.';
+    const loesUniversalHint = langCfg.universalHint;
     const slotPx = Math.max(16, Math.min(24, COL_PX + 2));
     let slotCells = '';
     for (let i = 0; i < loesW.length; i++) {
@@ -1308,7 +1451,7 @@ function generatePuzzleHTML(puzzleData, showSolution = false, omaName = '', issu
       : '';
     loeswortBundleHtml = `
     <div class="loeswort-unter-gitte">
-      <div class="loeswort-leiste-head">Lösungswort</div>
+      <div class="loeswort-leiste-head">${esc(langCfg.solutionWordLabel)}</div>
       <div class="loeswort-slots" style="--loes-slot:${slotPx}px">${slotCells}</div>
       <p class="loeswort-hint">${loesH ? esc(loesH) : esc(loesUniversalHint)}</p>
       ${reveal}
@@ -1316,9 +1459,11 @@ function generatePuzzleHTML(puzzleData, showSolution = false, omaName = '', issu
   }
 
   const gridW = gridWidth * COL_PX;
+  const htmlLang = lang === 'ar' ? 'ar' : lang === 'ru' ? 'ru' : lang === 'el' ? 'el' : lang === 'tr' ? 'tr' : lang === 'es' ? 'es' : lang === 'it' ? 'it' : 'de';
+  const htmlDir = langCfg.dir === 'rtl' ? ' dir="rtl"' : '';
 
   return `<!DOCTYPE html>
-<html lang="de">
+<html lang="${htmlLang}"${htmlDir}>
 <head>
 <meta charset="UTF-8">
 <title>Kreuzworträtsel – ${title}</title>
@@ -1589,11 +1734,11 @@ function generatePuzzleHTML(puzzleData, showSolution = false, omaName = '', issu
     <div class="clues-below">
       ${modeNote}
       <div class="clues-section">
-        <div class="clues-heading">Waagerecht →</div>
+        <div class="clues-heading">${esc(langCfg.acrossLabel)}</div>
         ${clueList(across)}
       </div>
       <div class="clues-section">
-        <div class="clues-heading">Senkrecht ↓</div>
+        <div class="clues-heading">${esc(langCfg.downLabel)}</div>
         ${clueList(down)}
       </div>
     </div>
