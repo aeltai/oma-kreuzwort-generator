@@ -1637,68 +1637,68 @@
 
   <nav class="main-tabs no-print" role="tablist" aria-label="Hauptbereich">
     <button type="button" class="main-tab active" id="tabPuzzleBtn" role="tab" aria-selected="true"
-      onclick="switchMainTab('puzzle')">Einzelrätsel</button>
+      onclick="switchMainTab('puzzle')" data-i18n="tabPuzzle">Einzelrätsel</button>
     <button type="button" class="main-tab" id="tabDeckBtn" role="tab" aria-selected="false"
-      onclick="switchMainTab('deck')">Stapel &amp; ZIP</button>
+      onclick="switchMainTab('deck')" data-i18n="tabDeck">Stapel &amp; ZIP</button>
     <button type="button" class="main-tab" id="tabMemoryBtn" role="tab" aria-selected="false"
-      onclick="switchMainTab('memory')">Wortgedächtnis</button>
+      onclick="switchMainTab('memory')" data-i18n="tabMemory">Wortgedächtnis</button>
   </nav>
 
   <!-- Settings Panel — shared between both tabs -->
   <div class="settings-panel no-print" id="settingsPanel">
     <div class="settings-inner">
       <div class="config-strip settings-full">
-        <span class="config-strip__label">Konfiguration</span>
+        <span class="config-strip__label" data-i18n="configLabel">Konfiguration</span>
         <span class="config-strip__sep">·</span>
         <span class="config-strip__desc">Diese Angaben gelten für <strong>Einzelrätsel</strong> und <strong>Stapel-ZIP</strong>. Über „Einstellungen“ blenden Sie dieses Panel ein oder aus.</span>
       </div>
 
       <!-- Name -->
       <div class="settings-group">
-        <label class="settings-label" for="inputName">Vorname (optional)</label>
+        <label class="settings-label" for="inputName" data-i18n="labelName">Vorname (optional)</label>
         <input class="settings-input" id="inputName" type="text" value=""
-               placeholder="z. B. Maria — für Ansprache im Rätsel und PDF"
+               placeholder="z. B. Maria — für Ansprache im Rätsel und PDF" data-i18n-placeholder="placeholderName"
                oninput="saveSettings()">
       </div>
 
       <div class="settings-group">
-        <label class="settings-label" for="selectHealthProfile">Krankheitsbild / Unterstützung (optional)</label>
+        <label class="settings-label" for="selectHealthProfile" data-i18n="labelHealth">Krankheitsbild / Unterstützung (optional)</label>
         <select class="settings-select" id="selectHealthProfile" onchange="saveSettings()">
-          <option value="none">Kein besonderer Fokus</option>
-          <option value="demenz">Demenz / leichte kognitive Einschränkung</option>
-          <option value="depression">Depression / wenig Antrieb / Konzentration</option>
-          <option value="schlaganfall">Nach Schlaganfall — Sprache &amp; Lesen</option>
-          <option value="parkinson">Parkinson — Motorik, klare Hinweise</option>
-          <option value="sehschwaeche">Sehschwäche</option>
-          <option value="angst">Ängstlichkeit / Unruhe</option>
+          <option value="none" data-i18n="healthNone">Kein besonderer Fokus</option>
+          <option value="demenz" data-i18n="healthDemenz">Demenz / leichte kognitive Einschränkung</option>
+          <option value="depression" data-i18n="healthDepression">Depression / wenig Antrieb / Konzentration</option>
+          <option value="schlaganfall" data-i18n="healthSchlaganfall">Nach Schlaganfall — Sprache &amp; Lesen</option>
+          <option value="parkinson" data-i18n="healthParkinson">Parkinson — Motorik, klare Hinweise</option>
+          <option value="sehschwaeche" data-i18n="healthSehschwaeche">Sehschwäche</option>
+          <option value="angst" data-i18n="healthAngst">Ängstlichkeit / Unruhe</option>
         </select>
       </div>
 
       <div class="settings-group">
-        <label class="settings-label" for="selectDifficulty">Schwierigkeitsgrad</label>
+        <label class="settings-label" for="selectDifficulty" data-i18n="labelDifficulty">Schwierigkeitsgrad</label>
         <select class="settings-select" id="selectDifficulty" onchange="saveSettings()">
-          <option value="sehr_leicht">Sehr leicht (kurze Wörter, sehr direkte Hinweise)</option>
-          <option value="leicht" selected>Leicht</option>
-          <option value="mittel">Mittel (etwas kniffliger, aber fair)</option>
+          <option value="sehr_leicht" data-i18n="diffSehrLeicht">Sehr leicht (kurze Wörter, sehr direkte Hinweise)</option>
+          <option value="leicht" selected data-i18n="diffLeicht">Leicht</option>
+          <option value="mittel" data-i18n="diffMittel">Mittel (etwas kniffliger, aber fair)</option>
         </select>
       </div>
 
       <div class="settings-group">
-        <label class="settings-label" for="selectWordCount">Anzahl Wörter im Rätsel</label>
+        <label class="settings-label" for="selectWordCount" data-i18n="labelWordCount">Anzahl Wörter im Rätsel</label>
         <select class="settings-select" id="selectWordCount" onchange="saveSettings()">
-          <option value="16">16 Wörter (kompakt &amp; schnell)</option>
-          <option value="20">20 Wörter</option>
-          <option value="24" selected>24 Wörter (Standard)</option>
-          <option value="28">28 Wörter</option>
-          <option value="32">32 Wörter (dicht &amp; anspruchsvoll)</option>
+          <option value="16" data-i18n="wc16">16 Wörter (kompakt &amp; schnell)</option>
+          <option value="20" data-i18n="wc20">20 Wörter</option>
+          <option value="24" selected data-i18n="wc24">24 Wörter (Standard)</option>
+          <option value="28" data-i18n="wc28">28 Wörter</option>
+          <option value="32" data-i18n="wc32">32 Wörter (dicht &amp; anspruchsvoll)</option>
         </select>
       </div>
 
       <!-- Short hints -->
       <div class="settings-group">
-        <label class="settings-label" for="inputContext">Kurze Zusatzwünsche (optional)</label>
+        <label class="settings-label" for="inputContext" data-i18n="labelContext">Kurze Zusatzwünsche (optional)</label>
         <textarea class="settings-textarea" id="inputContext"
-          placeholder="Nur wenn Sie keine lange Familiengeschichte nutzen: z. B. ‚mag klassische Musik, Rosen, Bayern …'"
+          placeholder="Nur wenn Sie keine lange Familiengeschichte nutzen: z. B. ‚mag klassische Musik, Rosen, Bayern …'" data-i18n-placeholder="placeholderContext"
           oninput="saveSettings()"></textarea>
       </div>
 
@@ -1706,19 +1706,19 @@
       <div class="settings-group settings-full">
         <div class="settings-checkbox-row">
           <input type="checkbox" id="chkUseFamily" checked onchange="saveSettings()">
-          <label for="chkUseFamily">Persönliche Familie, Berufe, Orte &amp; Beziehungen ins Rätsel einbeziehen (aus dem Kasten unten)</label>
+          <label for="chkUseFamily" data-i18n="labelUseFamily">Persönliche Familie, Berufe, Orte &amp; Beziehungen ins Rätsel einbeziehen (aus dem Kasten unten)</label>
         </div>
-        <label class="settings-label" for="familyStory" style="margin-top:10px">Familie &amp; Lebensgeschichte (optional, freier Text)</label>
+        <label class="settings-label" for="familyStory" style="margin-top:10px" data-i18n="labelFamily">Familie &amp; Lebensgeschichte (optional, freier Text)</label>
         <textarea class="settings-textarea family-field" id="familyStory"
-          placeholder="Hier können Sie alles einfügen: Ehepartner, Kinder, Enkel, Berufe, Städte, Schulen, besondere Erinnerungen … Je konkreter, desto persönlicher werden Wörter und Hinweise im Kreuzworträtsel."
+          placeholder="Hier können Sie alles einfügen: Ehepartner, Kinder, Enkel, Berufe, Städte, Schulen, besondere Erinnerungen …" data-i18n-placeholder="placeholderFamily"
           oninput="saveSettings()"></textarea>
       </div>
 
       <!-- Topics — full width row -->
       <div class="settings-group settings-full topics-block">
         <div class="topics-block__header">
-          <h3 class="topics-block__title">Themen für allgemeine Begriffe</h3>
-          <p class="topics-block__lede">Immer wählbar — bei Familientext werden sie mit persönlichen Hinweisen gemischt.</p>
+          <h3 class="topics-block__title" data-i18n="topicsTitle">Themen für allgemeine Begriffe</h3>
+          <p class="topics-block__lede" data-i18n="topicsLede">Immer wählbar — bei Familientext werden sie mit persönlichen Hinweisen gemischt.</p>
         </div>
         <div class="topic-grid" id="topicGrid">
           <!-- chips rendered by JS -->
@@ -1732,49 +1732,49 @@
   <!-- Controls -->
   <div class="controls no-print" id="controls">
     <button type="button" class="btn btn--primary" id="generateBtn" onclick="generatePuzzle()">
-      Neues Rätsel erstellen
+      <span data-i18n="btnGenerate">Neues Rätsel erstellen</span>
     </button>
     <button type="button" class="btn btn--secondary" id="settingsBtn" onclick="toggleSettings()">
-      Einstellungen
+      <span data-i18n="btnSettings">Einstellungen</span>
     </button>
-    <span class="controls-hint" id="statusHint">Klicken Sie auf „Neues Rätsel erstellen"</span>
+    <span class="controls-hint" id="statusHint" data-i18n="statusHint">Klicken Sie auf „Neues Rätsel erstellen"</span>
   </div>
 
   <!-- Puzzle Area -->
   <div class="puzzle-area puzzle-idle" id="puzzleArea">
     <div class="state-msg" id="welcomeMsg">
       <div class="icon">🌸</div>
-      <h3>Herzlich willkommen!</h3>
-      <p>Klicken Sie oben auf <strong>„Neues Rätsel erstellen"</strong>,<br>um ein frisches Rätsel für Oma zu erzeugen.</p>
+      <h3 data-i18n="welcomeTitle">Herzlich willkommen!</h3>
+      <p data-i18n-html="welcomeBody">Klicken Sie oben auf <strong>„Neues Rätsel erstellen"</strong>,<br>um ein frisches Rätsel für Oma zu erzeugen.</p>
     </div>
   </div>
 
   <div id="puzzleActionsBar" class="puzzle-actions-bar no-print">
     <button type="button" class="btn btn--secondary" data-solution-toggle onclick="toggleSolution()">
-      Lösung anzeigen
+      <span data-i18n="btnToggleSolution">Lösung anzeigen</span>
     </button>
     <button type="button" class="btn btn--secondary" onclick="exportFile('pdf', false, this)">
-      PDF für Oma
+      <span data-i18n="btnPdf">PDF für Oma</span>
     </button>
     <button type="button" class="btn btn--secondary" onclick="exportFile('pdf', true, this)">
-      Lösung als PDF
+      <span data-i18n="btnPdfSolution">Lösung als PDF</span>
     </button>
     <button type="button" class="btn btn--secondary" onclick="exportFile('png', false, this)">
-      Als Bild (PNG)
+      <span data-i18n="btnPng">Als Bild (PNG)</span>
     </button>
   </div>
 
   <!-- Footer -->
   <footer class="puzzle-footer" id="puzzleFooter" style="display:none">
     <span class="puzzle-footer-left" id="footerLeft">Erstellt mit ❤ für die Familie</span>
-    <span class="puzzle-footer-right">Viel Spaß beim Rätseln!</span>
+    <span class="puzzle-footer-right" data-i18n="footerFun">Viel Spaß beim Rätseln!</span>
   </footer>
 
   </div><!-- /panelPuzzle -->
 
   <div id="panelMemory" class="no-print" style="display:none" role="tabpanel" aria-hidden="true">
     <div class="memory-panel">
-      <h2>Wortgedächtnis</h2>
+      <h2 data-i18n="memTitle">Wortgedächtnis</h2>
       <p class="mem-intro">
         Alle bisher generierten Lösungswörter werden hier gespeichert — inklusive dem Lösungswort jedes Rätsels.
         Claude bekommt diese Liste beim nächsten Rätsel mit und vermeidet Wiederholungen automatisch.
@@ -1782,28 +1782,24 @@
       </p>
 
       <div class="mem-section">
-        <div class="mem-section-title">Übersicht</div>
+        <div class="mem-section-title" data-i18n="memOverview">Übersicht</div>
         <div class="mem-stats" id="memStats">
           <span class="mem-stat-chip"><strong id="memTotalPuzzles">0</strong> Rätsel gespeichert</span>
           <span class="mem-stat-chip"><strong id="memTotalWords">0</strong> einzigartige Wörter</span>
         </div>
         <div class="mem-actions">
-          <button type="button" class="btn btn--secondary btn--sm" onclick="exportWordHistory()">
-            Als Text kopieren
-          </button>
-          <button type="button" class="btn--danger btn--sm" onclick="clearAllHistory()">
-            Alles löschen
-          </button>
+          <button type="button" class="btn btn--secondary btn--sm" onclick="exportWordHistory()"><span data-i18n="memCopyText">Als Text kopieren</span></button>
+          <button type="button" class="btn--danger btn--sm" onclick="clearAllHistory()"><span data-i18n="memDeleteAll">Alles löschen</span></button>
         </div>
       </div>
 
       <div class="mem-section">
-        <div class="mem-section-title">Wortfrequenz (häufigste zuerst)</div>
+        <div class="mem-section-title" data-i18n="memFreqTitle">Wortfrequenz (häufigste zuerst)</div>
         <div id="wordFreqContainer"></div>
       </div>
 
       <div class="mem-section">
-        <div class="mem-section-title">Rätsel-Verlauf</div>
+        <div class="mem-section-title" data-i18n="memHistoryTitle">Rätsel-Verlauf</div>
         <div id="historyListContainer"></div>
       </div>
     </div>
@@ -1811,28 +1807,24 @@
 
   <div id="panelDeck" class="deck-panel no-print" style="display:none" role="tabpanel" aria-hidden="true">
     <div class="controls no-print">
-      <button type="button" class="btn btn--secondary" id="deckSettingsBtn" onclick="toggleSettings()">
-        Einstellungen
-      </button>
+      <button type="button" class="btn btn--secondary" id="deckSettingsBtn" onclick="toggleSettings()"><span data-i18n="btnSettings">Einstellungen</span></button>
     </div>
-    <h2>Rätselstapel als ZIP</h2>
+    <h2 data-i18n="deckTitle">Rätselstapel als ZIP</h2>
     <p class="deck-intro">
       Wie beim Einzelrätsel erscheint das <strong>Quest-Log</strong> mit Fortschritt. Alle Rätsel nutzen dieselben Einstellungen (Name, Krankheitsbild, Schwierigkeit, Familientext, Rätselart, Themen). Das kann einige Minuten dauern.
     </p>
     <div class="deck-row">
       <div class="deck-field">
-        <label for="deckCount">Anzahl Rätsel (1–15)</label>
+        <label for="deckCount" data-i18n="deckCountLabel">Anzahl Rätsel (1–15)</label>
         <input type="number" id="deckCount" min="1" max="15" value="10"
           onchange="saveDeckPrefs()" oninput="saveDeckPrefs()">
       </div>
       <div class="deck-check-row">
         <input type="checkbox" id="deckIncludeSolutions" onchange="saveDeckPrefs()">
-        <label for="deckIncludeSolutions" style="margin:0;font-weight:600">Pro Rätsel auch Lösungs-PDF packen</label>
+        <label for="deckIncludeSolutions" style="margin:0;font-weight:600" data-i18n="deckIncludeSolutions">Pro Rätsel auch Lösungs-PDF packen</label>
       </div>
     </div>
-    <button type="button" class="btn btn--primary" id="deckZipBtn" onclick="buildDeckZip()">
-      Stapel erzeugen &amp; ZIP laden
-    </button>
+    <button type="button" class="btn btn--primary" id="deckZipBtn" onclick="buildDeckZip()"><span data-i18n="btnDeckZip">Stapel erzeugen &amp; ZIP laden</span></button>
     <div class="deck-progress" id="deckProgress"></div>
   </div>
 
@@ -1856,9 +1848,11 @@
 
   function updateFooterLeftLabel() {
     const name = document.getElementById('inputName').value.trim();
+    const lang = document.getElementById('selectLanguage')?.value || getSettings().language || 'de';
+    const t = UI_I18N[lang] || UI_I18N.de;
     document.getElementById('footerLeft').textContent = name
-      ? `Erstellt mit ❤ für ${name}`
-      : 'Erstellt mit ❤ für die Familie';
+      ? t.footerNamedFamily(name)
+      : t.footerFamily;
   }
 
   // ---- Settings persistence ----
@@ -1895,6 +1889,7 @@
       wordCount,
     }));
     updateFooterLeftLabel();
+    applyUILang(language);
   }
 
   function loadSettings() {
@@ -1934,6 +1929,7 @@
     if (selWc) selWc.value = String(wc);
 
     updateFooterLeftLabel();
+    applyUILang(lang);
   }
 
   // ---- Render topic chips ----
@@ -2559,22 +2555,289 @@
       area.classList.remove('puzzle-idle');
       footer.style.display = 'flex';
       document.getElementById('puzzleActionsBar')?.classList.add('visible');
-      hint.textContent = `Rätsel Nr. ${puzzleCount} · ${data.words.length} Wörter`;
+      const _lang = getSettings().language || 'de';
+      const _t = UI_I18N[_lang] || UI_I18N.de;
+      hint.textContent = `Nr. ${puzzleCount} · ${data.words.length} Wörter`;
     } catch (err) {
+      const _lang = getSettings().language || 'de';
+      const _t = UI_I18N[_lang] || UI_I18N.de;
       hideClaudeQuestOverlay();
       area.innerHTML = `
         <div class="error-box">
-          <strong>Fehler beim Erstellen des Rätsels:</strong><br>${err.message}
+          <strong>${_t.errorTitle}</strong><br>${err.message}
         </div>
         <div class="state-msg">
-          <p>Bitte versuchen Sie es erneut.</p>
+          <p>${_t.errorRetry}</p>
         </div>`;
       area.classList.add('puzzle-idle');
-      hint.textContent = 'Fehler – bitte erneut versuchen';
+      hint.textContent = _t.statusError;
     } finally {
       if (!questOk) hideClaudeQuestOverlay();
       btn.disabled = false;
     }
+  }
+
+  // ---- UI Translations ----
+  const UI_I18N = {
+    de: {
+      tabPuzzle:'Einzelrätsel', tabDeck:'Stapel & ZIP', tabMemory:'Wortgedächtnis',
+      configLabel:'Konfiguration',
+      configDesc:'Diese Angaben gelten für <strong>Einzelrätsel</strong> und <strong>Stapel-ZIP</strong>. Über „Einstellungen" blenden Sie dieses Panel ein oder aus.',
+      labelName:'Vorname (optional)', placeholderName:'z. B. Maria — für Ansprache im Rätsel und PDF',
+      labelHealth:'Krankheitsbild / Unterstützung (optional)',
+      labelDifficulty:'Schwierigkeitsgrad', labelWordCount:'Anzahl Wörter im Rätsel',
+      labelContext:'Kurze Zusatzwünsche (optional)',
+      placeholderContext:'Nur wenn Sie keine lange Familiengeschichte nutzen: z. B. ‚mag klassische Musik, Rosen, Bayern …'',
+      labelUseFamily:'Persönliche Familie, Berufe, Orte & Beziehungen ins Rätsel einbeziehen (aus dem Kasten unten)',
+      labelFamily:'Familie & Lebensgeschichte (optional, freier Text)',
+      placeholderFamily:'Hier können Sie alles einfügen: Ehepartner, Kinder, Enkel, Berufe, Städte, Schulen, besondere Erinnerungen …',
+      topicsTitle:'Themen für allgemeine Begriffe',
+      topicsLede:'Immer wählbar — bei Familientext werden sie mit persönlichen Hinweisen gemischt.',
+      btnGenerate:'Neues Rätsel erstellen', btnSettings:'Einstellungen',
+      btnToggleSolution:'Lösung anzeigen', btnPdf:'PDF für Oma', btnPdfSolution:'Lösung als PDF', btnPng:'Als Bild (PNG)',
+      statusHint:'Klicken Sie auf „Neues Rätsel erstellen"',
+      welcomeTitle:'Herzlich willkommen!',
+      welcomeBody:'Klicken Sie oben auf <strong>„Neues Rätsel erstellen"</strong>,<br>um ein frisches Rätsel für Oma zu erzeugen.',
+      errorTitle:'Fehler beim Erstellen des Rätsels:', errorRetry:'Bitte versuchen Sie es erneut.', statusError:'Fehler – bitte erneut versuchen',
+      healthNone:'Kein besonderer Fokus', healthDemenz:'Demenz / leichte kognitive Einschränkung',
+      healthDepression:'Depression / wenig Antrieb / Konzentration', healthSchlaganfall:'Nach Schlaganfall — Sprache & Lesen',
+      healthParkinson:'Parkinson — Motorik, klare Hinweise', healthSehschwaeche:'Sehschwäche', healthAngst:'Ängstlichkeit / Unruhe',
+      diffSehrLeicht:'Sehr leicht (kurze Wörter, sehr direkte Hinweise)', diffLeicht:'Leicht', diffMittel:'Mittel (etwas kniffliger, aber fair)',
+      wc16:'16 Wörter (kompakt & schnell)', wc20:'20 Wörter', wc24:'24 Wörter (Standard)', wc28:'28 Wörter', wc32:'32 Wörter (dicht & anspruchsvoll)',
+      memTitle:'Wortgedächtnis', memOverview:'Übersicht', memPuzzlesSaved:'Rätsel gespeichert', memUniqueWords:'einzigartige Wörter',
+      memCopyText:'Als Text kopieren', memDeleteAll:'Alles löschen',
+      memFreqTitle:'Wortfrequenz (häufigste zuerst)', memHistoryTitle:'Rätsel-Verlauf',
+      deckTitle:'Rätselstapel als ZIP', deckCountLabel:'Anzahl Rätsel (1–15)',
+      deckIncludeSolutions:'Pro Rätsel auch Lösungs-PDF packen', btnDeckZip:'Stapel erzeugen & ZIP laden',
+      footerFun:'Viel Spaß beim Rätseln!', footerFamily:'Erstellt mit ❤ für die Familie',
+      footerNamedFamily: name => `Erstellt mit ❤ für ${name}`,
+    },
+    es: {
+      tabPuzzle:'Crucigrama', tabDeck:'Lote & ZIP', tabMemory:'Memoria',
+      configLabel:'Configuración',
+      configDesc:'Estos ajustes se aplican al crucigrama individual y al lote ZIP. Con «Ajustes» puede mostrar u ocultar este panel.',
+      labelName:'Nombre (opcional)', placeholderName:'p. ej. María — para personalizar el crucigrama y el PDF',
+      labelHealth:'Perfil de salud (opcional)',
+      labelDifficulty:'Dificultad', labelWordCount:'Número de palabras',
+      labelContext:'Deseos adicionales (opcional)',
+      placeholderContext:'p. ej. le gusta la música clásica, las rosas, la naturaleza …',
+      labelUseFamily:'Incluir familia, profesiones y lugares personales en el crucigrama',
+      labelFamily:'Familia & Historia de vida (opcional, texto libre)',
+      placeholderFamily:'Puede incluir todo: cónyuge, hijos, nietos, profesiones, ciudades, recuerdos especiales …',
+      topicsTitle:'Temas para conceptos generales',
+      topicsLede:'Siempre elegibles — con texto familiar se mezclan con pistas personales.',
+      btnGenerate:'Crear nuevo crucigrama', btnSettings:'Ajustes',
+      btnToggleSolution:'Mostrar solución', btnPdf:'PDF para abuela', btnPdfSolution:'Solución en PDF', btnPng:'Como imagen (PNG)',
+      statusHint:'Haz clic en «Crear nuevo crucigrama»',
+      welcomeTitle:'¡Bienvenido!',
+      welcomeBody:'Haz clic arriba en <strong>«Crear nuevo crucigrama»</strong><br>para generar un crucigrama personalizado.',
+      errorTitle:'Error al crear el crucigrama:', errorRetry:'Por favor, inténtelo de nuevo.', statusError:'Error — inténtelo de nuevo',
+      healthNone:'Sin enfoque especial', healthDemenz:'Demencia / deterioro cognitivo leve',
+      healthDepression:'Depresión / poca motivación / concentración', healthSchlaganfall:'Tras un ictus — lenguaje y lectura',
+      healthParkinson:'Parkinson — motricidad, pistas claras', healthSehschwaeche:'Visión reducida', healthAngst:'Ansiedad / inquietud',
+      diffSehrLeicht:'Muy fácil (palabras cortas, pistas directas)', diffLeicht:'Fácil', diffMittel:'Medio (algo más difícil, pero justo)',
+      wc16:'16 palabras (compacto & rápido)', wc20:'20 palabras', wc24:'24 palabras (estándar)', wc28:'28 palabras', wc32:'32 palabras (denso & desafiante)',
+      memTitle:'Memoria de palabras', memOverview:'Resumen', memPuzzlesSaved:'crucigramas guardados', memUniqueWords:'palabras únicas',
+      memCopyText:'Copiar como texto', memDeleteAll:'Borrar todo',
+      memFreqTitle:'Frecuencia de palabras (más frecuentes primero)', memHistoryTitle:'Historial de crucigramas',
+      deckTitle:'Lote de crucigramas en ZIP', deckCountLabel:'Número de crucigramas (1–15)',
+      deckIncludeSolutions:'Incluir PDF de solución por crucigrama', btnDeckZip:'Generar lote & descargar ZIP',
+      footerFun:'¡Que disfrutes resolviéndolo!', footerFamily:'Hecho con ❤ para la familia',
+      footerNamedFamily: name => `Hecho con ❤ para ${name}`,
+    },
+    it: {
+      tabPuzzle:'Cruciverba', tabDeck:'Lotto & ZIP', tabMemory:'Memoria',
+      configLabel:'Configurazione',
+      configDesc:'Queste impostazioni si applicano al cruciverba singolo e al lotto ZIP. Con «Impostazioni» puoi mostrare o nascondere questo pannello.',
+      labelName:'Nome (opzionale)', placeholderName:'es. Maria — per personalizzare il cruciverba e il PDF',
+      labelHealth:'Profilo di salute (opzionale)',
+      labelDifficulty:'Difficoltà', labelWordCount:'Numero di parole',
+      labelContext:'Desideri aggiuntivi (opzionale)',
+      placeholderContext:'es. ama la musica classica, le rose, la natura …',
+      labelUseFamily:'Includere famiglia, professioni e luoghi personali nel cruciverba',
+      labelFamily:'Famiglia & Storia di vita (opzionale, testo libero)',
+      placeholderFamily:'Puoi inserire tutto: coniuge, figli, nipoti, professioni, città, ricordi speciali …',
+      topicsTitle:'Temi per concetti generali',
+      topicsLede:'Sempre selezionabili — con il testo familiare vengono mescolati con suggerimenti personali.',
+      btnGenerate:'Crea nuovo cruciverba', btnSettings:'Impostazioni',
+      btnToggleSolution:'Mostra soluzione', btnPdf:'PDF per nonna', btnPdfSolution:'Soluzione in PDF', btnPng:'Come immagine (PNG)',
+      statusHint:'Clicca su «Crea nuovo cruciverba»',
+      welcomeTitle:'Benvenuto!',
+      welcomeBody:'Clicca in alto su <strong>«Crea nuovo cruciverba»</strong><br>per generare un cruciverba personalizzato.',
+      errorTitle:'Errore nella creazione del cruciverba:', errorRetry:'Si prega di riprovare.', statusError:'Errore — riprovare',
+      healthNone:'Nessun focus speciale', healthDemenz:'Demenza / lieve deterioramento cognitivo',
+      healthDepression:'Depressione / poca motivazione / concentrazione', healthSchlaganfall:'Dopo un ictus — linguaggio e lettura',
+      healthParkinson:'Parkinson — motricità, suggerimenti chiari', healthSehschwaeche:'Vista ridotta', healthAngst:'Ansia / agitazione',
+      diffSehrLeicht:'Molto facile (parole corte, suggerimenti diretti)', diffLeicht:'Facile', diffMittel:"Medio (un po' più difficile, ma giusto)",
+      wc16:'16 parole (compatto & veloce)', wc20:'20 parole', wc24:'24 parole (standard)', wc28:'28 parole', wc32:'32 parole (denso & impegnativo)',
+      memTitle:'Memoria delle parole', memOverview:'Panoramica', memPuzzlesSaved:'cruciverba salvati', memUniqueWords:'parole uniche',
+      memCopyText:'Copia come testo', memDeleteAll:'Elimina tutto',
+      memFreqTitle:'Frequenza delle parole (più frequenti prima)', memHistoryTitle:'Cronologia cruciverba',
+      deckTitle:'Lotto cruciverba in ZIP', deckCountLabel:'Numero di cruciverba (1–15)',
+      deckIncludeSolutions:'Includere PDF di soluzione per ogni cruciverba', btnDeckZip:'Genera lotto & scarica ZIP',
+      footerFun:'Buon divertimento!', footerFamily:'Fatto con ❤ per la famiglia',
+      footerNamedFamily: name => `Fatto con ❤ per ${name}`,
+    },
+    tr: {
+      tabPuzzle:'Tek Bulmaca', tabDeck:'Toplu ZIP', tabMemory:'Kelime Hafızası',
+      configLabel:'Yapılandırma',
+      configDesc:'Bu ayarlar tek bulmaca ve toplu ZIP için geçerlidir. «Ayarlar» ile bu paneli gösterebilir veya gizleyebilirsiniz.',
+      labelName:'İsim (isteğe bağlı)', placeholderName:'örn. Ayşe — bulmacayı kişiselleştirmek için',
+      labelHealth:'Sağlık Profili (isteğe bağlı)',
+      labelDifficulty:'Zorluk Seviyesi', labelWordCount:'Bulmacadaki Kelime Sayısı',
+      labelContext:'Ek İstekler (isteğe bağlı)',
+      placeholderContext:'örn. klasik müziği sever, çiçekler, doğa …',
+      labelUseFamily:'Kişisel aile, meslekler ve yerleri bulmacaya dahil et',
+      labelFamily:'Aile & Yaşam Hikayesi (isteğe bağlı, serbest metin)',
+      placeholderFamily:'Her şeyi ekleyebilirsiniz: eş, çocuklar, torunlar, meslekler, şehirler, özel anılar …',
+      topicsTitle:'Genel Kavramlar için Temalar',
+      topicsLede:'Her zaman seçilebilir — aile metniyle birlikte kişisel ipuçlarıyla karışır.',
+      btnGenerate:'Yeni Bulmaca Oluştur', btnSettings:'Ayarlar',
+      btnToggleSolution:'Çözümü göster', btnPdf:'Büyükanne için PDF', btnPdfSolution:'Çözüm PDF', btnPng:'Resim olarak (PNG)',
+      statusHint:'«Yeni Bulmaca Oluştur»a tıklayın',
+      welcomeTitle:'Hoş geldiniz!',
+      welcomeBody:'Kişiselleştirilmiş bir bulmaca oluşturmak için yukarıdaki <strong>«Yeni Bulmaca Oluştur»</strong> düğmesine tıklayın.',
+      errorTitle:'Bulmaca oluşturulurken hata:', errorRetry:'Lütfen tekrar deneyin.', statusError:'Hata — lütfen tekrar deneyin',
+      healthNone:'Özel odak yok', healthDemenz:'Demans / hafif bilişsel bozukluk',
+      healthDepression:'Depresyon / düşük motivasyon / konsantrasyon', healthSchlaganfall:'İnme sonrası — dil ve okuma',
+      healthParkinson:'Parkinson — motor beceriler, net ipuçları', healthSehschwaeche:'Görme bozukluğu', healthAngst:'Anksiyete / huzursuzluk',
+      diffSehrLeicht:'Çok kolay (kısa kelimeler, çok doğrudan ipuçları)', diffLeicht:'Kolay', diffMittel:'Orta (biraz daha zor, ama adil)',
+      wc16:'16 kelime (kompakt & hızlı)', wc20:'20 kelime', wc24:'24 kelime (standart)', wc28:'28 kelime', wc32:'32 kelime (yoğun & zorlu)',
+      memTitle:'Kelime Hafızası', memOverview:'Genel Bakış', memPuzzlesSaved:'bulmaca kaydedildi', memUniqueWords:'benzersiz kelime',
+      memCopyText:'Metin olarak kopyala', memDeleteAll:'Hepsini sil',
+      memFreqTitle:'Kelime sıklığı (en sık olanlar önce)', memHistoryTitle:'Bulmaca Geçmişi',
+      deckTitle:"ZIP'te Bulmaca Paketi", deckCountLabel:'Bulmaca sayısı (1–15)',
+      deckIncludeSolutions:"Her bulmaca için çözüm PDF'i de ekle", btnDeckZip:'Paket oluştur & ZIP indir',
+      footerFun:'İyi eğlenceler!', footerFamily:'Aile için ❤ ile yapıldı',
+      footerNamedFamily: name => `${name} için ❤ ile yapıldı`,
+    },
+    ru: {
+      tabPuzzle:'Кроссворд', tabDeck:'Пакет & ZIP', tabMemory:'Память слов',
+      configLabel:'Конфигурация',
+      configDesc:'Эти настройки применяются к одиночному кроссворду и пакету ZIP. Кнопкой «Настройки» можно показать или скрыть эту панель.',
+      labelName:'Имя (необязательно)', placeholderName:'напр. Мария — для личного обращения в кроссворде и PDF',
+      labelHealth:'Профиль здоровья (необязательно)',
+      labelDifficulty:'Уровень сложности', labelWordCount:'Количество слов в кроссворде',
+      labelContext:'Дополнительные пожелания (необязательно)',
+      placeholderContext:'напр. любит классическую музыку, розы, природу …',
+      labelUseFamily:'Включить личную семью, профессии и места в кроссворд',
+      labelFamily:'Семья & жизненная история (необязательно, свободный текст)',
+      placeholderFamily:'Можете включить всё: супруг(а), дети, внуки, профессии, города, особые воспоминания …',
+      topicsTitle:'Темы для общих понятий',
+      topicsLede:'Всегда доступны — при семейном тексте смешиваются с личными подсказками.',
+      btnGenerate:'Создать новый кроссворд', btnSettings:'Настройки',
+      btnToggleSolution:'Показать решение', btnPdf:'PDF для бабушки', btnPdfSolution:'Решение в PDF', btnPng:'Как изображение (PNG)',
+      statusHint:'Нажмите «Создать новый кроссворд»',
+      welcomeTitle:'Добро пожаловать!',
+      welcomeBody:'Нажмите вверху <strong>«Создать новый кроссворд»</strong>,<br>чтобы создать персональный кроссворд.',
+      errorTitle:'Ошибка при создании кроссворда:', errorRetry:'Пожалуйста, попробуйте ещё раз.', statusError:'Ошибка — попробуйте ещё раз',
+      healthNone:'Без особого фокуса', healthDemenz:'Деменция / лёгкое когнитивное расстройство',
+      healthDepression:'Депрессия / низкая мотивация / концентрация', healthSchlaganfall:'После инсульта — речь и чтение',
+      healthParkinson:'Паркинсон — моторика, чёткие подсказки', healthSehschwaeche:'Нарушение зрения', healthAngst:'Тревожность / беспокойство',
+      diffSehrLeicht:'Очень легко (короткие слова, прямые подсказки)', diffLeicht:'Легко', diffMittel:'Средне (чуть сложнее, но честно)',
+      wc16:'16 слов (компактно & быстро)', wc20:'20 слов', wc24:'24 слова (стандарт)', wc28:'28 слов', wc32:'32 слова (плотно & сложно)',
+      memTitle:'Память слов', memOverview:'Обзор', memPuzzlesSaved:'кроссвордов сохранено', memUniqueWords:'уникальных слов',
+      memCopyText:'Скопировать как текст', memDeleteAll:'Удалить всё',
+      memFreqTitle:'Частота слов (сначала наиболее частые)', memHistoryTitle:'История кроссвордов',
+      deckTitle:'Пакет кроссвордов в ZIP', deckCountLabel:'Количество кроссвордов (1–15)',
+      deckIncludeSolutions:'Включить PDF с решением для каждого кроссворда', btnDeckZip:'Создать пакет & скачать ZIP',
+      footerFun:'Приятной игры!', footerFamily:'Сделано с ❤ для семьи',
+      footerNamedFamily: name => `Сделано с ❤ для ${name}`,
+    },
+    el: {
+      tabPuzzle:'Σταυρόλεξο', tabDeck:'Δέσμη & ZIP', tabMemory:'Μνήμη λέξεων',
+      configLabel:'Διαμόρφωση',
+      configDesc:'Αυτές οι ρυθμίσεις ισχύουν για το μεμονωμένο σταυρόλεξο και τη δέσμη ZIP. Με «Ρυθμίσεις» μπορείτε να εμφανίσετε ή να αποκρύψετε αυτό το πάνελ.',
+      labelName:'Όνομα (προαιρετικό)', placeholderName:'π.χ. Μαρία — για εξατομίκευση του σταυρόλεξου και PDF',
+      labelHealth:'Προφίλ υγείας (προαιρετικό)',
+      labelDifficulty:'Επίπεδο δυσκολίας', labelWordCount:'Αριθμός λέξεων στο σταυρόλεξο',
+      labelContext:'Επιπλέον επιθυμίες (προαιρετικό)',
+      placeholderContext:'π.χ. αγαπά κλασική μουσική, τριαντάφυλλα, φύση …',
+      labelUseFamily:'Συμπερίληψη οικογένειας, επαγγελμάτων και τόπων στο σταυρόλεξο',
+      labelFamily:'Οικογένεια & Ιστορία ζωής (προαιρετικό, ελεύθερο κείμενο)',
+      placeholderFamily:'Μπορείτε να συμπεριλάβετε τα πάντα: σύζυγο, παιδιά, εγγόνια, επαγγέλματα, πόλεις, αναμνήσεις …',
+      topicsTitle:'Θέματα για γενικές έννοιες',
+      topicsLede:'Πάντα επιλέξιμα — με οικογενειακό κείμενο αναμειγνύονται με προσωπικές υποδείξεις.',
+      btnGenerate:'Δημιουργία νέου σταυρόλεξου', btnSettings:'Ρυθμίσεις',
+      btnToggleSolution:'Εμφάνιση λύσης', btnPdf:'PDF για γιαγιά', btnPdfSolution:'Λύση σε PDF', btnPng:'Ως εικόνα (PNG)',
+      statusHint:'Κάντε κλικ στο «Δημιουργία νέου σταυρόλεξου»',
+      welcomeTitle:'Καλώς ήρθατε!',
+      welcomeBody:'Κάντε κλικ στο <strong>«Δημιουργία νέου σταυρόλεξου»</strong><br>για να δημιουργήσετε ένα εξατομικευμένο σταυρόλεξο.',
+      errorTitle:'Σφάλμα κατά τη δημιουργία σταυρόλεξου:', errorRetry:'Παρακαλώ δοκιμάστε ξανά.', statusError:'Σφάλμα — δοκιμάστε ξανά',
+      healthNone:'Χωρίς ειδική εστίαση', healthDemenz:'Άνοια / ήπια γνωστική έκπτωση',
+      healthDepression:'Κατάθλιψη / χαμηλό κίνητρο / συγκέντρωση', healthSchlaganfall:'Μετά από εγκεφαλικό — γλώσσα και ανάγνωση',
+      healthParkinson:'Πάρκινσον — κινητικότητα, σαφείς υποδείξεις', healthSehschwaeche:'Μειωμένη όραση', healthAngst:'Άγχος / ανησυχία',
+      diffSehrLeicht:'Πολύ εύκολο (σύντομες λέξεις, άμεσες υποδείξεις)', diffLeicht:'Εύκολο', diffMittel:'Μεσαίο (λίγο πιο δύσκολο, αλλά δίκαιο)',
+      wc16:'16 λέξεις (συμπαγές & γρήγορο)', wc20:'20 λέξεις', wc24:'24 λέξεις (τυπικό)', wc28:'28 λέξεις', wc32:'32 λέξεις (πυκνό & απαιτητικό)',
+      memTitle:'Μνήμη λέξεων', memOverview:'Επισκόπηση', memPuzzlesSaved:'σταυρόλεξα αποθηκευμένα', memUniqueWords:'μοναδικές λέξεις',
+      memCopyText:'Αντιγραφή ως κείμενο', memDeleteAll:'Διαγραφή όλων',
+      memFreqTitle:'Συχνότητα λέξεων (πιο συχνές πρώτα)', memHistoryTitle:'Ιστορικό σταυρόλεξων',
+      deckTitle:'Δέσμη σταυρόλεξων σε ZIP', deckCountLabel:'Αριθμός σταυρόλεξων (1–15)',
+      deckIncludeSolutions:'Συμπερίληψη PDF λύσης ανά σταυρόλεξο', btnDeckZip:'Δημιουργία δέσμης & λήψη ZIP',
+      footerFun:'Καλή διασκέδαση!', footerFamily:'Φτιαγμένο με ❤ για την οικογένεια',
+      footerNamedFamily: name => `Φτιαγμένο με ❤ για ${name}`,
+    },
+    ar: {
+      tabPuzzle:'كلمات متقاطعة', tabDeck:'حزمة ZIP', tabMemory:'ذاكرة الكلمات',
+      configLabel:'الإعدادات',
+      configDesc:'تنطبق هذه الإعدادات على الكلمات المتقاطعة الفردية وحزمة ZIP. يمكنك إظهار أو إخفاء هذه اللوحة عبر «الإعدادات».',
+      labelName:'الاسم (اختياري)', placeholderName:'مثال: مريم — لتخصيص الكلمات المتقاطعة والـ PDF',
+      labelHealth:'الملف الصحي (اختياري)',
+      labelDifficulty:'مستوى الصعوبة', labelWordCount:'عدد الكلمات في اللعبة',
+      labelContext:'رغبات إضافية (اختياري)',
+      placeholderContext:'مثال: تحب الموسيقى الكلاسيكية، الورود، الطبيعة …',
+      labelUseFamily:'تضمين الأسرة والمهن والأماكن الشخصية في الكلمات المتقاطعة',
+      labelFamily:'الأسرة وقصة الحياة (اختياري، نص حر)',
+      placeholderFamily:'يمكنك تضمين كل شيء: الزوج/الزوجة، الأطفال، الأحفاد، المهن، المدن، الذكريات الخاصة …',
+      topicsTitle:'مواضيع للمفاهيم العامة',
+      topicsLede:'قابل للاختيار دائماً — مع نص الأسرة تمتزج مع التلميحات الشخصية.',
+      btnGenerate:'إنشاء كلمات متقاطعة جديدة', btnSettings:'الإعدادات',
+      btnToggleSolution:'عرض الحل', btnPdf:'PDF للجدة', btnPdfSolution:'الحل بصيغة PDF', btnPng:'كصورة (PNG)',
+      statusHint:'انقر على «إنشاء كلمات متقاطعة جديدة»',
+      welcomeTitle:'أهلاً وسهلاً!',
+      welcomeBody:'انقر على <strong>«إنشاء كلمات متقاطعة جديدة»</strong><br>لإنشاء كلمات متقاطعة مخصصة.',
+      errorTitle:'خطأ في إنشاء الكلمات المتقاطعة:', errorRetry:'الرجاء المحاولة مرة أخرى.', statusError:'خطأ — يرجى المحاولة مرة أخرى',
+      healthNone:'بدون تركيز خاص', healthDemenz:'الخرف / ضعف إدراكي خفيف',
+      healthDepression:'الاكتئاب / قلة الدافعية / التركيز', healthSchlaganfall:'بعد السكتة الدماغية — اللغة والقراءة',
+      healthParkinson:'باركنسون — المهارات الحركية، تلميحات واضحة', healthSehschwaeche:'ضعف البصر', healthAngst:'القلق / التوتر',
+      diffSehrLeicht:'سهل جداً (كلمات قصيرة، تلميحات مباشرة)', diffLeicht:'سهل', diffMittel:'متوسط (أصعب قليلاً، لكن عادل)',
+      wc16:'١٦ كلمة (مضغوط وسريع)', wc20:'٢٠ كلمة', wc24:'٢٤ كلمة (قياسي)', wc28:'٢٨ كلمة', wc32:'٣٢ كلمة (كثيف وصعب)',
+      memTitle:'ذاكرة الكلمات', memOverview:'نظرة عامة', memPuzzlesSaved:'كلمات متقاطعة محفوظة', memUniqueWords:'كلمات فريدة',
+      memCopyText:'نسخ كنص', memDeleteAll:'حذف الكل',
+      memFreqTitle:'تكرار الكلمات (الأكثر تكراراً أولاً)', memHistoryTitle:'سجل الكلمات المتقاطعة',
+      deckTitle:'حزمة كلمات متقاطعة في ZIP', deckCountLabel:'عدد الكلمات المتقاطعة (١–١٥)',
+      deckIncludeSolutions:'تضمين PDF الحل لكل كلمة متقاطعة', btnDeckZip:'إنشاء الحزمة وتنزيل ZIP',
+      footerFun:'استمتع باللعبة!', footerFamily:'صُنع بـ ❤ للأسرة',
+      footerNamedFamily: name => `صُنع بـ ❤ لـ ${name}`,
+    },
+  };
+
+  function applyUILang(lang) {
+    const t = UI_I18N[lang] || UI_I18N.de;
+    // textContent nodes
+    document.querySelectorAll('[data-i18n]').forEach(el => {
+      const key = el.dataset.i18n;
+      if (t[key] !== undefined) el.textContent = t[key];
+    });
+    // innerHTML nodes (for <strong> etc.)
+    document.querySelectorAll('[data-i18n-html]').forEach(el => {
+      const key = el.dataset.i18nHtml;
+      if (t[key] !== undefined) el.innerHTML = t[key];
+    });
+    // placeholders
+    document.querySelectorAll('[data-i18n-placeholder]').forEach(el => {
+      const key = el.dataset.i18nPlaceholder;
+      if (t[key] !== undefined) el.placeholder = t[key];
+    });
+    // mem stats chips - update suffix text
+    const puzzlesEl = document.getElementById('memTotalPuzzles');
+    const wordsEl = document.getElementById('memTotalWords');
+    if (puzzlesEl) puzzlesEl.closest('.mem-stat-chip').lastChild.textContent = ' ' + t.memPuzzlesSaved;
+    if (wordsEl) wordsEl.closest('.mem-stat-chip').lastChild.textContent = ' ' + t.memUniqueWords;
+    // footer left
+    updateFooterLeftLabel();
+    // document dir for Arabic
+    document.documentElement.dir = lang === 'ar' ? 'rtl' : 'ltr';
   }
 
   const LANG_LABELS = {
