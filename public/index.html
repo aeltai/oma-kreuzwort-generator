@@ -73,6 +73,7 @@
       text-align: center;
       padding: 14px 20px 16px;
       border-bottom: 1px solid rgba(0, 0, 0, 0.15);
+      position: relative;
     }
     .masthead-logo {
       font-size: 11px;
@@ -90,6 +91,35 @@
       line-height: 1;
       margin: 4px 0 2px;
       text-transform: uppercase;
+    }
+    .masthead-lang {
+      position: absolute;
+      top: 50%;
+      right: 16px;
+      transform: translateY(-50%);
+    }
+    .masthead-lang select {
+      background: rgba(255,255,255,0.15);
+      border: 1px solid rgba(255,255,255,0.35);
+      color: #fff;
+      border-radius: 6px;
+      padding: 4px 8px;
+      font-size: 13px;
+      cursor: pointer;
+      outline: none;
+      appearance: none;
+      -webkit-appearance: none;
+      padding-right: 24px;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='rgba(255,255,255,0.7)'/%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right 7px center;
+    }
+    .masthead-lang select:hover {
+      background-color: rgba(255,255,255,0.25);
+    }
+    .masthead-lang select option {
+      background: #8b0a1f;
+      color: #fff;
     }
     .masthead-sub {
       font-size: 12px;
@@ -1592,6 +1622,17 @@
   <header class="masthead">
     <div class="masthead-logo">✦ &nbsp; Omas Rätselheft &nbsp; ✦</div>
     <h1>Kreuzworträtsel</h1>
+    <div class="masthead-lang">
+      <select id="selectLanguage" onchange="saveSettings()" title="Sprache / Language">
+        <option value="de">🇩🇪 Deutsch</option>
+        <option value="es">🇪🇸 Español</option>
+        <option value="it">🇮🇹 Italiano</option>
+        <option value="tr">🇹🇷 Türkçe</option>
+        <option value="ru">🇷🇺 Русский</option>
+        <option value="el">🇬🇷 Ελληνικά</option>
+        <option value="ar">🇸🇦 العربية</option>
+      </select>
+    </div>
   </header>
 
   <nav class="main-tabs no-print" role="tablist" aria-label="Hauptbereich">
@@ -1671,20 +1712,6 @@
         <textarea class="settings-textarea family-field" id="familyStory"
           placeholder="Hier können Sie alles einfügen: Ehepartner, Kinder, Enkel, Berufe, Städte, Schulen, besondere Erinnerungen … Je konkreter, desto persönlicher werden Wörter und Hinweise im Kreuzworträtsel."
           oninput="saveSettings()"></textarea>
-      </div>
-
-      <!-- Sprache / Language -->
-      <div class="settings-group">
-        <label class="settings-label" for="selectLanguage">Sprache / Language</label>
-        <select class="settings-select" id="selectLanguage" onchange="saveSettings()">
-          <option value="de">🇩🇪 Deutsch</option>
-          <option value="es">🇪🇸 Español</option>
-          <option value="it">🇮🇹 Italiano</option>
-          <option value="tr">🇹🇷 Türkçe</option>
-          <option value="ru">🇷🇺 Русский</option>
-          <option value="el">🇬🇷 Ελληνικά</option>
-          <option value="ar">🇸🇦 العربية</option>
-        </select>
       </div>
 
       <!-- Topics — full width row -->
