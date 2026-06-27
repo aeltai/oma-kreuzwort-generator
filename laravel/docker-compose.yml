@@ -1,0 +1,20 @@
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: mneme-laravel:latest
+    ports:
+      - "8000:8000"
+    environment:
+      APP_URL: http://localhost:8000
+      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
+      ANTHROPIC_MODEL: ${ANTHROPIC_MODEL:-claude-opus-4-5}
+    volumes:
+      - sqlite-data:/var/www/html/database
+      - app-storage:/var/www/html/storage
+    restart: unless-stopped
+
+volumes:
+  sqlite-data:
+  app-storage:

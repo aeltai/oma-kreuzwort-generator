@@ -1,0 +1,160 @@
+/* Supplemental styles for Livewire-specific markup not present in the
+   original ported CSS. Kept intentionally small; reuses the warm palette. */
+
+.app-root {
+    min-height: 100vh;
+}
+
+/* Header user area */
+.masthead-user-name {
+    font-weight: 600;
+    color: #fff;
+    margin-right: 6px;
+    opacity: 0.95;
+}
+
+/* Ghost / settings buttons */
+.btn--ghost {
+    background: #fff;
+    border: 1.5px solid #d9c9b0;
+    color: #7a5a32;
+}
+.btn--ghost:hover {
+    background: #faf4ea;
+}
+.btn--settings {
+    white-space: nowrap;
+}
+.btn--block {
+    display: block;
+    width: 100%;
+    margin-top: 8px;
+}
+.btn--block-spacing {
+    margin-top: 12px;
+}
+
+/* Top control row spacing */
+.mode-row--top {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 12px;
+    max-width: 920px;
+    margin: 18px auto 0;
+    padding: 12px 16px;
+    background: #fff;
+    border: 1px solid #ecdfca;
+    border-radius: 14px;
+    box-shadow: 0 4px 18px rgba(120, 90, 50, 0.08);
+}
+.mode-row--top .btn--generate {
+    margin-left: auto;
+}
+
+/* Generic panel cards (patients / history) */
+.panel-card {
+    max-width: 760px;
+    margin: 22px auto;
+    padding: 26px 28px;
+    background: #fff;
+    border: 1px solid #ecdfca;
+    border-radius: 16px;
+    box-shadow: 0 6px 24px rgba(120, 90, 50, 0.1);
+}
+.panel-card h2 {
+    margin: 0 0 18px;
+    font-family: Georgia, serif;
+    color: #7a5a32;
+}
+.patient-add-row {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    margin-bottom: 10px;
+}
+.patient-add-row .settings-input {
+    flex: 1;
+}
+
+/* Auth modal */
+.modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(60, 40, 20, 0.45);
+    backdrop-filter: blur(3px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+    padding: 20px;
+}
+.modal-card {
+    position: relative;
+    width: 100%;
+    max-width: 420px;
+    background: #fff;
+    border-radius: 18px;
+    padding: 30px 28px 26px;
+    box-shadow: 0 20px 60px rgba(60, 40, 20, 0.3);
+}
+.modal-card h2 {
+    margin: 0 0 18px;
+    font-family: Georgia, serif;
+    color: #7a5a32;
+}
+.modal-close {
+    position: absolute;
+    top: 14px;
+    right: 16px;
+    border: none;
+    background: none;
+    font-size: 20px;
+    cursor: pointer;
+    color: #b08a5a;
+}
+.modal-switch {
+    text-align: center;
+    margin-top: 14px;
+}
+.modal-switch button {
+    background: none;
+    border: none;
+    color: #b5651d;
+    cursor: pointer;
+    font-size: 14px;
+    text-decoration: underline;
+}
+
+/* Form helpers */
+.form-error {
+    color: #c8102e;
+    font-size: 13px;
+    margin: 4px 0 0;
+}
+.hint-text {
+    font-size: 13px;
+    color: #8a7152;
+    margin: 4px 0 0;
+}
+
+/* Footer */
+.app-footer {
+    max-width: 920px;
+    margin: 30px auto 24px;
+    padding-top: 16px;
+    border-top: 1px solid #ecdfca;
+    text-align: center;
+    color: #8a7152;
+    font-size: 13px;
+    display: flex;
+    gap: 6px;
+    justify-content: center;
+    flex-wrap: wrap;
+}
+
+/* RTL niceties */
+.app-root[dir="rtl"] .mode-row--top .btn--generate {
+    margin-left: 0;
+    margin-right: auto;
+}
