@@ -3,7 +3,7 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-    image: mneme-laravel:latest
+    image: mneme:latest
     ports:
       - "8000:8000"
     environment:
